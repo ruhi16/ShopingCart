@@ -16,6 +16,7 @@ class CreatePurchaseDetailsTable extends Migration
         Schema::create('purchase_details', function (Blueprint $table) {
             $table->id();
             $table->integer('purchase_id')->nullable();
+            $table->integer('product_id')->nullable();
             
             $table->integer('purchase_unit_id')->nullable();
             $table->integer('purchase_unit_qty')->nullable();

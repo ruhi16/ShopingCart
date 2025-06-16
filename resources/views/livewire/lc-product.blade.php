@@ -23,9 +23,9 @@
                 <tbody>
                     @foreach($products as $product)
                     <tr class="bg-white hover:bg-gray-50 transition-colors">
-                        <td class="px-4 py-2 border-b border-gray-200">{{ $loop->iteration }}</td>
-                        <td class="px-4 py-2 border-b border-gray-200">{{ $product->category->name }}</td>
-                        <td class="px-4 py-2 border-b border-gray-200">{{ $product->item->name }}</td>
+                        <td class="px-4 py-2 border-b border-gray-200">{{ $loop->iteration ?? 'N/A' }}</td>
+                        <td class="px-4 py-2 border-b border-gray-200">{{ $product->category->name ?? 'N/A' }}</td>
+                        <td class="px-4 py-2 border-b border-gray-200">{{ $product->item->name ?? 'N/A' }}</td>
                         <td class="px-4 py-2 border-b border-gray-200"></td>
                         <td class="px-4 py-2 border-b border-gray-200">
                             <span class="inline-flex px-2 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>

@@ -21,6 +21,13 @@ class Product extends Model
 
     }
 
+    public function purchaseDetails(){
+        return $this->hasMany(PurchaseDetail::class, 'product_id', 'id');
+    }
+
+    public function saleDetails(){
+        return $this->hasMany(SaleDetail::class, 'product_id', 'id');
+    }
 
 
 }

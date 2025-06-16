@@ -19,6 +19,7 @@
             @livewire('lc-product') 
             @livewire('lc-unit')
             @livewire('lc-purchase')
+            @livewire('lc-purchase-new-entry')
             
             
 

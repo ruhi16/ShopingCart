@@ -17,7 +17,8 @@ class CreateSaleUnitsTable extends Migration
             $table->id();
             $table->integer('purchase_id')->nullable();
             $table->integer('purchase_unit_id')->nullable();
-            $table->integer('unit_id')->nullable();
+            $table->integer('sale_unit_id')->nullable();
+            $table->double('sale_unit_rate')->nullable();
             $table->double('purchase_factor')->nullable();
             
 

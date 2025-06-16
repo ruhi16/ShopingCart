@@ -16,8 +16,8 @@ class CreateSaleDetailsTable extends Migration
         Schema::create('sale_details', function (Blueprint $table) {
             $table->id();
             $table->integer('sale_id')->nullable();
-
             $table->integer('product_id')->nullable();
+            
             $table->integer('sale_unit_id')->nullable();
             $table->integer('sale_unit_qty')->nullable();
             $table->integer('sale_unit_rate')->nullable();
