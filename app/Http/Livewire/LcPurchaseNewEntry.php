@@ -29,6 +29,12 @@ class LcPurchaseNewEntry extends Component
 
     public $products = null;
 
+
+
+
+
+    
+
     public function mount(){
         $this->vendors = \App\Models\Vendor::all();
         $this->categories = \App\Models\Category::all();
