@@ -21,7 +21,7 @@ class Product extends Model
 
     }
 
-    public function purchaseDetails(){
+    public function PurchaseDetails(){
         return $this->hasMany(PurchaseDetail::class, 'product_id', 'id');
     }
 

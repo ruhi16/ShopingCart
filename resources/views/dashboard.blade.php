@@ -23,7 +23,7 @@
             {{-- @livewire('lc-purchase-new-entry-v2') --}}
 
             @livewire('lc-product-showcase')
-            
+            @livewire('lc-product-stock')
 
 
 
