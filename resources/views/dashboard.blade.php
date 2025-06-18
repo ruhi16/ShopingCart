@@ -18,9 +18,9 @@
             @livewire('lc-item')    --}}
             {{-- @livewire('lc-product')  --}}
             {{-- @livewire('lc-unit') --}}
-            @livewire('lc-purchase')
+            {{-- @livewire('lc-purchase') --}}
             {{-- @livewire('lc-purchase-new-entry') --}}
-            @livewire('lc-purchase-new-entry-v2')
+            {{-- @livewire('lc-purchase-new-entry-v2') --}}
 
             @livewire('lc-product-showcase')
             
