@@ -23,4 +23,7 @@ class PurchaseDetail extends Model
     public function purchaseUnit(){
         return $this->belongsTo(Unit::class, 'purchase_unit_id', 'id');
     }
+
+    
+
 }

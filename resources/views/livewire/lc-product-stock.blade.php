@@ -98,26 +98,35 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                     {{-- @foreach($purchases as $purchase ) --}}
-                    @foreach($purchaseDetails as $purchase)
-                        {{-- {{ $purchase }} --}}
+                    @foreach($purchaseDetails as $purchaseDetail)
+                        {{-- {{ $purchaseDetail }} --}}
                     
                         <!-- Rice - Bulk to Retail -->
                         <tr class="hover:bg-gray-50 category-food unit-conversion">
-                            <td class="px-3 py-3 font-mono text-xs">INV-{{ $purchase->id ?? 'X' }}</td>
+                            <td class="px-3 py-3 font-mono text-xs">INV-{{ $purchaseDetail->id ?? 'X' }}</td>
 
                             <td class="px-3 py-3">
-                                {{-- {{ $purchase->purchaseDetails }} --}}
-                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">{{ $purchase->name }}</span>
+                                {{-- {{ $purchaseDetail->purchaseDetailDetails }} --}}
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">{{ $purchaseDetail->product->category->name }}</span>
                             </td>
-                            <td class="px-3 py-3 font-medium">{{ $purchase->product->id }}</td>
+                            <td class="px-3 py-3 font-medium">{{ $purchaseDetail->product->item->name }}</td>
                             <td class="px-3 py-3 text-center">
-                                <span class="bg-blue-50 px-2 py-1 rounded text-xs">50kg Sack</span>
+                                <span class="bg-blue-50 px-2 py-1 rounded text-xs">
+                                    {{ $purchaseDetail->purchaseUnit->name }}-{{ $purchaseDetail->purchaseUnit->unit_amount }} {{ $purchaseDetail->purchaseUnit->unit_title }}
+                                </span>
                             </td>
-                            <td class="px-3 py-3 text-center">10</td>
-                            <td class="px-3 py-3 text-right">₹2,500</td>
-                            <td class="px-3 py-3 text-right font-medium">₹25,000</td>
+                            <td class="px-3 py-3 text-center">{{ $purchaseDetail->purchase_unit_qty }}</td>
+                            <td class="px-3 py-3 text-right">₹ {{ $purchaseDetail->purchase_unit_qty }}</td>
+                            <td class="px-3 py-3 text-right font-medium">₹ {{ $purchaseDetail->purchase_amount }} </td>
+                            {{-- Sale Units --}}
+                            {{-- {{ $purchaseDetail->saleUnits }}jj --}}
                             <td class="px-3 py-3 text-center">
-                                <span class="bg-green-50 px-2 py-1 rounded text-xs">1kg Pack</span>
+                                <span class="bg-green-50 px-2 py-1 rounded text-xs">
+                                {{-- XX{{ $saleUnits->where('purchase_id', $purchaseDetail->purchase->id)  }}                                 --}}
+                                </span>
+                                @foreach($saleUnits->where('purchase_id', $purchaseDetail->purchase->id) as $saleUnit)
+                                    {{ $saleUnit->sale_unit_id }}
+                                @endforeach
                             </td>
                             <td class="px-3 py-3 text-center">
                                 <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">1:50</span>
