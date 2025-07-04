@@ -6,7 +6,7 @@ use Livewire\Component;
 
 class LcMainLayout extends Component
 {
-    public $activeMenu = 'dashboard'; // Default active menu item
+    public $activeMenu = 'products'; // Default active menu item
     public $activeSubMenu = ''; // Active submenu item
     
     // Menu items structure
@@ -37,6 +37,7 @@ class LcMainLayout extends Component
     // Set active menu
     public function setActiveMenu($menu, $subMenu = null)
     {
+        // dd($menu);
         $this->activeMenu = $menu;
         $this->activeSubMenu = $subMenu;
     }

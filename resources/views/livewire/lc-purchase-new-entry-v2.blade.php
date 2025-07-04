@@ -80,7 +80,10 @@
                                         @foreach($productDetails as $index => $productDetail)
                                         <tr class="border-b border-gray-200">
                                             <td class="px-4 py-3">
-                                                <select wire:model="productDetails.{{ $index }}.category_id" wire:change="updateProductOptions({{ $index }})" class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+                                                <select 
+                                                    wire:model="productDetails.{{ $index }}.category_id" 
+                                                    wire:change="updateProductOptions({{ $index }})" 
+                                                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" required>
                                                     <option value="">Select Category</option>
                                                     @foreach($categories as $category)
                                                     <option value="{{ $category->id }}">{{ $category->name }}</option>

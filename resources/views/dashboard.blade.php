@@ -20,11 +20,11 @@
             {{-- @livewire('lc-unit') --}}
             {{-- @livewire('lc-purchase') --}}
             {{-- @livewire('lc-purchase-new-entry') --}}
-            {{-- @livewire('lc-purchase-new-entry-v2') --}}
+            @livewire('lc-purchase-new-entry-v2')
             @livewire('lc-main-layout')
             <br/>
             @livewire('lc-cart-details')
-            
+            <br/>
             @livewire('lc-product-showcase')
             @livewire('lc-product-stock')
 

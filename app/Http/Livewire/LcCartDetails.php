@@ -6,10 +6,10 @@ use Livewire\Component;
 
 class LcCartDetails extends Component
 {
-    public $activeMenu = 'products';
+    public $activeMenu = 'cart';
     public $activeSubMenu = 'products';
 
-    public $cartItemsCount = 0;
+    public $cartItemsCount = 5;
     public $cartTotal = 100.00;
     
     // Add cart items data
@@ -29,28 +29,28 @@ class LcCartDetails extends Component
             'image' => 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80'
         ],
         [
-            'id' => 2,
+            'id' => 3,
             'name' => 'Wireless Keyboard',
             'price' => 59.99,
             'quantity' => 2,
             'image' => 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80'
         ],
         [
-            'id' => 1,
+            'id' => 4,
             'name' => 'Premium Headphones',
             'price' => 199.99,
             'quantity' => 1,
             'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80'
         ],
         [
-            'id' => 2,
+            'id' => 5,
             'name' => 'Wireless Keyboard',
             'price' => 59.99,
             'quantity' => 2,
             'image' => 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&h=100&q=80'
         ],
         [
-            'id' => 2,
+            'id' => 6,
             'name' => 'Wireless Keyboard',
             'price' => 59.99,
             'quantity' => 2,
@@ -83,52 +83,103 @@ class LcCartDetails extends Component
         ],
     ];
 
-    public $products = [
-    [
-        'id' => 1,
-        'name' => 'Premium Wireless Headphones',
-        'price' => 199.99,
-        'description' => 'Noise-cancelling over-ear headphones with 30-hour battery life',
-        'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
-        'rating' => 4.8,
-        'review_count' => 124,
-        'colors' => ['Black', 'Silver', 'Blue'],
-        'in_stock' => true
-    ],
-    [
-        'id' => 2,
-        'name' => 'Mechanical Keyboard',
-        'price' => 89.99,
-        'description' => 'RGB backlit mechanical keyboard with customizable switches',
-        'image' => 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
-        'rating' => 4.6,
-        'review_count' => 89,
-        'colors' => ['Black', 'White'],
-        'in_stock' => true
-    ],
-    [
-        'id' => 3,
-        'name' => '4K Ultra HD Monitor',
-        'price' => 349.99,
-        'description' => '27-inch 4K monitor with HDR and 99% sRGB coverage',
-        'image' => 'https://images.unsplash.com/photo-1546538915-a9e2c8d0a8e6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
-        'rating' => 4.9,
-        'review_count' => 215,
-        'colors' => ['Black'],
-        'in_stock' => true
-    ],
-    [
-        'id' => 4,
-        'name' => 'Wireless Gaming Mouse',
-        'price' => 59.99,
-        'description' => 'High-precision wireless mouse with customizable DPI settings',
-        'image' => 'https://images.unsplash.com/photo-1527814050087-3793815479db?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
-        'rating' => 4.5,
-        'review_count' => 76,
-        'colors' => ['Black', 'Red'],
-        'in_stock' => false
-    ],
-];
+    public $products = null;
+
+//     public $products = [
+//     [
+//         'id' => 1,
+//         'name' => 'Premium Wireless Headphones',
+//         'price' => 199.99,
+//         'description' => 'Noise-cancelling over-ear headphones with 30-hour battery life',
+//         'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.8,
+//         'review_count' => 124,
+//         'colors' => ['Black', 'Silver', 'Blue'],
+//         'in_stock' => true
+//     ],
+//     [
+//         'id' => 2,
+//         'name' => 'Mechanical Keyboard',
+//         'price' => 89.99,
+//         'description' => 'RGB backlit mechanical keyboard with customizable switches',
+//         'image' => 'https://images.unsplash.com/photo-1540932239986-30128078f3c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.6,
+//         'review_count' => 89,
+//         'colors' => ['Black', 'White'],
+//         'in_stock' => true
+//     ],
+//     [
+//         'id' => 3,
+//         'name' => '4K Ultra HD Monitor',
+//         'price' => 349.99,
+//         'description' => '27-inch 4K monitor with HDR and 99% sRGB coverage',
+//         'image' => 'https://images.unsplash.com/photo-1546538915-a9e2c8d0a8e6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.9,
+//         'review_count' => 215,
+//         'colors' => ['Black'],
+//         'in_stock' => true
+//     ],
+//     [
+//         'id' => 4,
+//         'name' => 'Wireless Gaming Mouse',
+//         'price' => 59.99,
+//         'description' => 'High-precision wireless mouse with customizable DPI settings',
+//         'image' => 'https://images.unsplash.com/photo-1527814050087-3793815479db?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.5,
+//         'review_count' => 76,
+//         'colors' => ['Black', 'Red'],
+//         'in_stock' => false
+//     ],
+//     [
+//         'id' => 3,
+//         'name' => '4K Ultra HD Monitor',
+//         'price' => 349.99,
+//         'description' => '27-inch 4K monitor with HDR and 99% sRGB coverage',
+//         'image' => 'https://images.unsplash.com/photo-1546538915-a9e2c8d0a8e6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.9,
+//         'review_count' => 215,
+//         'colors' => ['Black'],
+//         'in_stock' => true
+//     ],
+//     [
+//         'id' => 4,
+//         'name' => 'Wireless Gaming Mouse',
+//         'price' => 59.99,
+//         'description' => 'High-precision wireless mouse with customizable DPI settings',
+//         'image' => 'https://images.unsplash.com/photo-1527814050087-3793815479db?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.5,
+//         'review_count' => 76,
+//         'colors' => ['Black', 'Red'],
+//         'in_stock' => false
+//     ],
+//     [
+//         'id' => 3,
+//         'name' => '4K Ultra HD Monitor',
+//         'price' => 349.99,
+//         'description' => '27-inch 4K monitor with HDR and 99% sRGB coverage',
+//         'image' => 'https://images.unsplash.com/photo-1546538915-a9e2c8d0a8e6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.9,
+//         'review_count' => 215,
+//         'colors' => ['Black'],
+//         'in_stock' => true
+//     ],
+//     [
+//         'id' => 4,
+//         'name' => 'Wireless Gaming Mouse',
+//         'price' => 59.99,
+//         'description' => 'High-precision wireless mouse with customizable DPI settings',
+//         'image' => 'https://images.unsplash.com/photo-1527814050087-3793815479db?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=500&q=80',
+//         'rating' => 4.5,
+//         'review_count' => 76,
+//         'colors' => ['Black', 'Red'],
+//         'in_stock' => false
+//     ],
+// ];
+
+    public function mount(){
+        $this->products = \App\Models\Product::all();
+
+    }
 
     // Calculate cart total
     public function getCartTotalProperty()
@@ -166,39 +217,39 @@ class LcCartDetails extends Component
         $this->activeMenu = $menu;
         $this->activeSubMenu = $subMenu;
     }
-// Add product to cart
-public function addToCart($productId)
-{
-    $product = collect($this->products)->firstWhere('id', $productId);
-    
-    // Check if product already in cart
-    $existingIndex = collect($this->cartItems)->search(function ($item) use ($productId) {
-        return $item['id'] == $productId;
-    });
-    
-    if ($existingIndex !== false) {
-        // Increment quantity if already in cart
-        $this->cartItems[$existingIndex]['quantity']++;
-    } else {
-        // Add new item to cart
-        $this->cartItems[] = [
-            'id' => $product['id'],
-            'name' => $product['name'],
-            'price' => $product['price'],
-            'quantity' => 1,
-            'image' => $product['image']
-        ];
+    // Add product to cart
+    public function addToCart($productId)
+    {
+        $product = collect($this->products)->firstWhere('id', $productId);
+        
+        // Check if product already in cart
+        $existingIndex = collect($this->cartItems)->search(function ($item) use ($productId) {
+            return $item['id'] == $productId;
+        });
+        
+        if ($existingIndex !== false) {
+            // Increment quantity if already in cart
+            $this->cartItems[$existingIndex]['quantity']++;
+        } else {
+            // Add new item to cart
+            $this->cartItems[] = [
+                'id' => $product['id'],
+                'name' => $product['name'],
+                'price' => $product['price'],
+                'quantity' => 1,
+                'image' => $product['image']
+            ];
+        }
+        
+        // Update active menu to show cart
+        $this->activeMenu = 'cart';
+        $this->activeSubMenu = null;
+        
+        // Small notification effect
+        $this->dispatchBrowserEvent('product-added', [
+            'message' => $product['name'] . ' added to cart'
+        ]);
     }
-    
-    // Update active menu to show cart
-    $this->activeMenu = 'cart';
-    $this->activeSubMenu = null;
-    
-    // Small notification effect
-    $this->dispatchBrowserEvent('product-added', [
-        'message' => $product['name'] . ' added to cart'
-    ]);
-}
 
     public function render()
     {

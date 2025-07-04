@@ -1,7 +1,7 @@
-<div>xx
+<div>
     @if($activeMenu === 'cart')
         <!-- Enhanced Cart Section -->
-        <div class="max-w-4xl mx-auto">cart
+        <div class="max-w-4xl mx-auto">
             <!-- Cart Header -->
             <div class="bg-white rounded-t-lg shadow-sm p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between">
@@ -142,10 +142,10 @@
             </div>
             @endif
         </div>
-    xx
+    
     @elseif($activeMenu === 'products')
         <!-- Product Showcase Section -->
-        <div class="max-w-7xl mx-auto">product
+        <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <div class="bg-white rounded-t-lg shadow-sm p-6 border-b border-gray-200">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -173,15 +173,17 @@
                     <div class="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
                         <!-- Product Image -->
                         <div class="relative aspect-square bg-gray-100">
-                            <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" class="w-full h-full object-cover" loading="lazy">
+                            <img src="{{ $product['img_ref01'] }}" alt="{{ $product['name'] }}" class="w-full h-full object-cover" loading="lazy">
                             <!-- Quick Add to Cart (appears on hover) -->
                             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                @if($product['in_stock'])
                                 <button wire:click="addToCart({{ $product['id'] }})" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors duration-200 flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                     Add to Cart
                                 </button>
+                                @endif
                             </div>
                             <!-- Out of Stock Badge -->
                             @if(!$product['in_stock'])
@@ -195,7 +197,7 @@
                         <div class="p-4">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <h3 class="font-medium text-gray-900">{{ $product['name'] }}</h3>
+                                    <h3 class="font-medium text-gray-900">{{ $product->Item->name }}-{{ $product->Category->name }}</h3>
                                     <p class="mt-1 text-sm text-gray-500 line-clamp-2">{{ $product['description'] }}</p>
                                 </div>
                                 <span class="font-semibold text-gray-900">${{ number_format($product['price'], 2) }}</span>
@@ -225,9 +227,9 @@
                             <div class="mt-3">
                                 <h4 class="text-xs text-gray-500">Colors</h4>
                                 <div class="mt-1 flex space-x-1">
-                                    @foreach($product['colors'] as $color)
+                                    {{-- @foreach($product['colors'] as $color)
                                         <span class="w-4 h-4 rounded-full border border-gray-200" style="background-color: {{ strtolower($color) }}" title="{{ $color }}"></span>
-                                    @endforeach
+                                    @endforeach --}}
                                 </div>
                             </div>
 
