@@ -11,7 +11,7 @@
                 @foreach($menuItems as $key => $item)
                     <li>
                         <button 
-                            @click="setActiveMenu('{{ $key }}')"
+                            wire:click="setActiveMenu('{{ $key }}')"
                             class="w-full flex items-center p-2 text-gray-600 rounded-lg hover:bg-gray-100 
                                    {{ $activeMenu === $key ? 'bg-blue-50 text-blue-600' : '' }}"
                         >
@@ -35,7 +35,7 @@
                                 @foreach($item['submenu'] as $subKey => $subItem)
                                     <li>
                                         <button 
-                                            @click="setActiveMenu('{{ $key }}', '{{ $subKey }}')"
+                                            wire:click="setActiveMenu('{{ $key }}', '{{ $subKey }}')"
                                             class="w-full flex items-center p-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 
                                                    {{ $activeSubMenu === $subKey ? 'bg-blue-50 text-blue-600' : '' }}"
                                         >
@@ -65,9 +65,12 @@
             <div class="text-gray-600">
                 @if($activeMenu === 'dashboard')
                     <p>Welcome to your dashboard. Here you can see an overview of your application.</p>
+                    @livewire('lc-cart')
+                    @livewire('lc-cart-details')
                 @elseif($activeMenu === 'products')
                     @if($activeSubMenu === 'all-products')
                         <p>Displaying all products...</p>
+                        @livewire('lc-product-stock')
                     @elseif($activeSubMenu === 'categories')
                         <p>Product categories management...</p>
                     @elseif($activeSubMenu === 'inventory')

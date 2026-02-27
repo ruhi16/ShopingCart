@@ -1,7 +1,7 @@
-<div>xx
+<div>
     @if($activeMenu === 'cart')
         <!-- Enhanced Cart Section -->
-        <div class="max-w-4xl mx-auto">cart
+        <div class="max-w-4xl mx-auto">
             <!-- Cart Header -->
             <div class="bg-white rounded-t-lg shadow-sm p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between">

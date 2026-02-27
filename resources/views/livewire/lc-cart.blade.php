@@ -1,4 +1,4 @@
-<div>
+<div class="bg-red-300">
     
     <!-- Cart with badge -->
     <div class="relative">
