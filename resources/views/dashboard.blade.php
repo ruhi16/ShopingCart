@@ -1,9 +1,9 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+    {{-- <x-slot name="myheader">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight bg-red-400">
             {{ __('Dashboard') }}
         </h2>
-    </x-slot>
+    </x-slot> --}}
 
     <div class="py-12">
         <div class="flex flex-col max-w-8xl mx-auto sm:px-6 lg:px-8">
@@ -13,21 +13,8 @@
                 </div>
             </div> --}}
             
-            {{-- @livewire('lc-counter') --}}
-            {{-- @livewire('lc-category')
-            @livewire('lc-item')    --}}
-            {{-- @livewire('lc-product')  --}}
-            {{-- @livewire('lc-unit') --}}
-            {{-- @livewire('lc-purchase') --}}
-            {{-- @livewire('lc-purchase-new-entry') --}}
-            {{-- @livewire('lc-purchase-new-entry-v2') --}}
             @livewire('lc-main-layout')
-            <br/>
-            @livewire('lc-cart-details')
             
-            @livewire('lc-product-showcase')
-            @livewire('lc-product-stock')
-
 
 
         </div>
