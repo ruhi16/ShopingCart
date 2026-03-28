@@ -29,6 +29,9 @@ class Ex30MarksEntryComp2 extends Component
     public $selected_subject_id;
     public $full_mark = 100;
 
+    // Marks entry toggle - default is inactive (false)
+    public $marks_entry_enabled = false;
+
     // Marks data
     public $marksData = [];
     public $studentList = [];
@@ -59,8 +62,12 @@ class Ex30MarksEntryComp2 extends Component
 
     public function render()
     {
-        $this->loadOptions();
-        $this->loadStudents();
+        // Only reload options and students if selections have changed
+        // Don't reload students if marks_entry_enabled is false and we already have studentList
+        if (!$this->marks_entry_enabled || empty($this->studentList)) {
+            $this->loadOptions();
+            $this->loadStudents();
+        }
 
         return view('livewire.ex30-marks-entry-comp2');
     }
@@ -205,21 +212,21 @@ class Ex30MarksEntryComp2 extends Component
 
     private function loadStudents()
     {
+        // Store existing marks data to preserve user input
+        $existingMarksData = $this->marksData;
+        
         $this->studentList = [];
         $this->marksData = [];
         $this->selectedExamDetail = null;
         $this->selectedExamSetting = null;
         $this->exam_setting_id = null;
 
-        if (!$this->selected_session_id || !$this->selected_myclass_id || !$this->selected_semester_id || !$this->selected_exam_detail_id) {
+        // Load students when class and semester are selected
+        if (!$this->selected_session_id || !$this->selected_myclass_id || !$this->selected_semester_id) {
             return;
         }
-        
-        // Load selected exam detail info
-        $this->selectedExamDetail = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
-            ->find($this->selected_exam_detail_id);
 
-        // Get ALL studentcr records matching session, myclass, semester, section
+        // Get studentcr records matching session, myclass, semester, section
         $query = Bs11Studentcr::with(['studentdb'])
             ->where('session_id', $this->selected_session_id)
             ->where('school_id', $this->selected_school_id)
@@ -234,9 +241,13 @@ class Ex30MarksEntryComp2 extends Component
 
         $allStudents = $query->orderBy('roll_no', 'ASC')->get();
 
-        // If subject is selected, filter students who have this subject
+        // If exam_detail AND subject are selected, filter students who have this subject
         $students = $allStudents;
-        if ($this->selected_subject_id) {
+        if ($this->selected_exam_detail_id && $this->selected_subject_id) {
+            // Load exam detail info
+            $this->selectedExamDetail = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
+                ->find($this->selected_exam_detail_id);
+            
             // Load exam setting for this combination
             $settingQuery = Ex25Settings::where('session_id', $this->selected_session_id)
                 ->where('school_id', $this->selected_school_id)
@@ -274,9 +285,9 @@ class Ex30MarksEntryComp2 extends Component
         }
 
         // Get existing marks for this subject/session/school/exam_detail (if subject selected)
-        $existingMarks = collect([]);
-        if ($this->selected_subject_id) {
-            $existingMarks = Ex30MarksEntry::where('session_id', $this->selected_session_id)
+        $existingMarksFromDb = collect([]);
+        if ($this->selected_subject_id && $this->selected_exam_detail_id) {
+            $existingMarksFromDb = Ex30MarksEntry::where('session_id', $this->selected_session_id)
                 ->where('school_id', $this->selected_school_id)
                 ->where('subject_id', $this->selected_subject_id)
                 ->where('exam_detail_id', $this->selected_exam_detail_id)
@@ -290,7 +301,6 @@ class Ex30MarksEntryComp2 extends Component
             $this->studentList[] = [
                 'id' => $studentcr->id,
                 'studentcr_id' => $studentcr->id,
-                'studentdb_id' => $studentcr->studentdb_id,
                 'name' => $studentDb ? ($studentDb->student_name ?? 'N/A') : 'N/A',
                 'roll_no' => $studentcr->roll_no,
                 'myclass_id' => $studentcr->current_myclass_id,
@@ -298,12 +308,28 @@ class Ex30MarksEntryComp2 extends Component
                 'semester_id' => $studentcr->current_semester_id,
             ];
 
-            $existing = $existingMarks->get($studentcr->id);
+            // Check if we have preserved marks data for this student
+            $preservedData = $existingMarksData[$studentcr->id] ?? null;
+            $existing = $existingMarksFromDb->get($studentcr->id);
             
-            // Initialize with proper values - use empty string for better form handling
+            // Determine if absent (marks_obtained = -99)
+            $isAbsent = false;
+            $marksObtained = '';
+            
+            if ($preservedData && isset($preservedData['marks_obtained'])) {
+                // Use preserved data if available
+                $marksObtained = $preservedData['marks_obtained'];
+                $isAbsent = ($marksObtained === '-99' || $marksObtained === -99);
+            } elseif ($existing) {
+                // Load from database
+                $marksObtained = $existing->marks_obtained;
+                $isAbsent = ($existing->marks_obtained == -99);
+            }
+            
             $this->marksData[$studentcr->id] = [
-                'marks_obtained' => $existing && $existing->marks_obtained !== null ? (string)$existing->marks_obtained : '',
-                'marks_entry_id' => $existing ? $existing->id : null,
+                'marks_obtained' => $marksObtained,
+                'marks_entry_id' => $preservedData['marks_entry_id'] ?? ($existing ? $existing->id : null),
+                'is_absent' => $isAbsent,
             ];
         }
     }
@@ -321,8 +347,54 @@ class Ex30MarksEntryComp2 extends Component
             $studentcrId = $student['id'];
             $data = $this->marksData[$studentcrId] ?? null;
             
-            // Skip if no data or marks_obtained is not set
-            if (!$data || !isset($data['marks_obtained'])) {
+            // Skip if no data
+            if (!$data) {
+                continue;
+            }
+            
+            $isAbsent = !empty($data['is_absent']);
+            
+            // Handle absent students - save as -99
+            if ($isAbsent) {
+                $dataToSave = [
+                    'studentcr_id' => $studentcrId,
+                    'myclass_id' => $student['myclass_id'],
+                    'section_id' => $student['section_id'],
+                    'semester_id' => $student['semester_id'],
+                    'subject_id' => $this->selected_subject_id,
+                    'exam_detail_id' => $this->selected_exam_detail_id,
+                    'exam_setting_id' => $this->exam_setting_id,
+                    'marks_obtained' => -99,
+                    'marks_percentage' => 0,
+                    'marks_grade' => 'AB',
+                    'session_id' => $this->selected_session_id,
+                    'school_id' => $this->selected_school_id,
+                    'is_active' => 1,
+                    'is_absent' => 1,
+                ];
+
+                if (isset($data['marks_entry_id']) && $data['marks_entry_id']) {
+                    Ex30MarksEntry::where('id', $data['marks_entry_id'])->update($dataToSave);
+                } else {
+                    $existing = Ex30MarksEntry::where('studentcr_id', $studentcrId)
+                        ->where('subject_id', $this->selected_subject_id)
+                        ->where('exam_detail_id', $this->selected_exam_detail_id)
+                        ->where('session_id', $this->selected_session_id)
+                        ->where('school_id', $this->selected_school_id)
+                        ->first();
+
+                    if ($existing) {
+                        $existing->update($dataToSave);
+                    } else {
+                        Ex30MarksEntry::create($dataToSave);
+                    }
+                }
+                $savedCount++;
+                continue;
+            }
+            
+            // Skip if marks_obtained is not set or empty
+            if (!isset($data['marks_obtained'])) {
                 continue;
             }
             
@@ -343,7 +415,6 @@ class Ex30MarksEntryComp2 extends Component
 
             $dataToSave = [
                 'studentcr_id' => $studentcrId,
-                'studentdb_id' => $student['studentdb_id'],
                 'myclass_id' => $student['myclass_id'],
                 'section_id' => $student['section_id'],
                 'semester_id' => $student['semester_id'],
@@ -356,6 +427,7 @@ class Ex30MarksEntryComp2 extends Component
                 'session_id' => $this->selected_session_id,
                 'school_id' => $this->selected_school_id,
                 'is_active' => 1,
+                'is_absent' => 0,
             ];
 
             if (isset($data['marks_entry_id']) && $data['marks_entry_id']) {
@@ -379,6 +451,105 @@ class Ex30MarksEntryComp2 extends Component
         }
 
         session()->flash('message', "Successfully saved {$savedCount} marks.");
+        
+        // Reload students to reflect changes
+        $this->loadStudents();
+    }
+
+    // Save individual student marks
+    public function saveStudentMarks($studentcrId)
+    {
+        if (!$this->selected_session_id || !$this->selected_myclass_id || !$this->selected_semester_id || !$this->selected_exam_detail_id || !$this->selected_subject_id) {
+            session()->flash('error', 'Please select session, class, semester, exam detail, and subject.');
+            return;
+        }
+
+        $student = collect($this->studentList)->firstWhere('id', $studentcrId);
+        if (!$student) {
+            return;
+        }
+
+        $data = $this->marksData[$studentcrId] ?? null;
+        if (!$data) {
+            return;
+        }
+
+        $isAbsent = !empty($data['is_absent']);
+        
+        // Handle absent students - save as -99
+        if ($isAbsent) {
+            $dataToSave = [
+                'studentcr_id' => $studentcrId,
+                'myclass_id' => $student['myclass_id'],
+                'section_id' => $student['section_id'],
+                'semester_id' => $student['semester_id'],
+                'subject_id' => $this->selected_subject_id,
+                'exam_detail_id' => $this->selected_exam_detail_id,
+                'exam_setting_id' => $this->exam_setting_id,
+                'marks_obtained' => -99,
+                'marks_percentage' => 0,
+                'marks_grade' => 'AB',
+                'session_id' => $this->selected_session_id,
+                'school_id' => $this->selected_school_id,
+                'is_active' => 1,
+                'is_absent' => 1,
+            ];
+        } else {
+            // Trim and check if empty
+            $marksValue = trim((string)($data['marks_obtained'] ?? ''));
+            
+            if ($marksValue === '') {
+                session()->flash('error', 'Please enter marks for the student.');
+                return;
+            }
+
+            $marksObtained = (float) $marksValue;
+            
+            // Validate marks range
+            if ($marksObtained < 0 || $marksObtained > $this->full_mark) {
+                session()->flash('error', 'Marks must be between 0 and ' . $this->full_mark);
+                return;
+            }
+            
+            $percentage = $this->full_mark > 0 ? round(($marksObtained / $this->full_mark) * 100, 2) : 0;
+            $grade = $this->calculateGrade($percentage);
+
+            $dataToSave = [
+                'studentcr_id' => $studentcrId,
+                'myclass_id' => $student['myclass_id'],
+                'section_id' => $student['section_id'],
+                'semester_id' => $student['semester_id'],
+                'subject_id' => $this->selected_subject_id,
+                'exam_detail_id' => $this->selected_exam_detail_id,
+                'exam_setting_id' => $this->exam_setting_id,
+                'marks_obtained' => $marksObtained,
+                'marks_percentage' => $percentage,
+                'marks_grade' => $grade,
+                'session_id' => $this->selected_session_id,
+                'school_id' => $this->selected_school_id,
+                'is_active' => 1,
+                'is_absent' => 0,
+            ];
+        }
+
+        if (isset($data['marks_entry_id']) && $data['marks_entry_id']) {
+            Ex30MarksEntry::where('id', $data['marks_entry_id'])->update($dataToSave);
+        } else {
+            $existing = Ex30MarksEntry::where('studentcr_id', $studentcrId)
+                ->where('subject_id', $this->selected_subject_id)
+                ->where('exam_detail_id', $this->selected_exam_detail_id)
+                ->where('session_id', $this->selected_session_id)
+                ->where('school_id', $this->selected_school_id)
+                ->first();
+
+            if ($existing) {
+                $existing->update($dataToSave);
+            } else {
+                Ex30MarksEntry::create($dataToSave);
+            }
+        }
+
+        session()->flash('message', "Successfully saved marks for student.");
         
         // Reload students to reflect changes
         $this->loadStudents();
@@ -457,5 +628,11 @@ class Ex30MarksEntryComp2 extends Component
         $this->selectedExamSetting = null;
         $this->exam_setting_id = null;
         $this->loadStudents();
+    }
+    
+    // Toggle marks entry enabled/disabled
+    public function toggleMarksEntry()
+    {
+        $this->marks_entry_enabled = !$this->marks_entry_enabled;
     }
 }
