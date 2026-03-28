@@ -93,9 +93,9 @@
         </div>
         
         {{-- Second Row --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        {{-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"> --}}
             {{-- Full Mark --}}
-            <div>
+            {{-- <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Full Mark
                     @if($selectedExamSetting && $selectedExamSetting->full_mark)
@@ -104,8 +104,8 @@
                 </label>
                 <input type="number" wire:model="full_mark" min="1"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-        </div>
+            </div> --}}
+        {{-- </div> --}}
     </div>
 
     {{-- Success/Error Messages --}}
@@ -124,7 +124,15 @@
     @if($selectedExamDetail)
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <h3 class="text-sm font-semibold text-blue-900 mb-2">Selected Exam Details:</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div class="grid grid-cols-4 md:grid-cols-6 gap-3 text-sm">
+                <div>
+                    <span class="font-medium text-blue-800">Class</span>
+                    <span class="text-blue-700">{{ $selectedExamDetail->myclass_id ?? 'N/A' }}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-blue-800">Semester:</span>
+                    <span class="text-blue-700">{{ $selectedExamDetail->semester_id ?? 'N/A' }}</span>
+                </div>
                 <div>
                     <span class="font-medium text-blue-800">Exam Name:</span>
                     <span class="text-blue-700">{{ $selectedExamDetail->examName->name ?? 'N/A' }}</span>
@@ -147,7 +155,7 @@
             @if($selectedExamSetting)
                 <div class="mt-3 pt-3 border-t border-blue-200">
                     <h4 class="text-xs font-semibold text-blue-900 mb-2">Exam Setting Details:</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                    <div class="grid grid-cols-4 md:grid-cols-6 gap-3 text-xs">
                         <div>
                             <span class="font-medium text-blue-800">Full Mark:</span>
                             <span class="text-blue-700">{{ $selectedExamSetting->full_mark ?? 'N/A' }}</span>

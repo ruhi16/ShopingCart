@@ -9,12 +9,13 @@
     {{-- Filters --}}
     <div class="bg-white p-4 rounded-lg shadow mb-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Select Exam for Marks Entry</h3>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {{-- Session --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Session *</label>
-                <select wire:model="selected_session_id" class="w-full rounded border-gray-300 @error('selected_session_id') border-red-500 @enderror">
+                <select wire:model="selected_session_id"
+                    class="w-full rounded border-gray-300 @error('selected_session_id') border-red-500 @enderror">
                     <option value="">-- Select Session --</option>
                     @foreach($sessionOptions as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
@@ -22,11 +23,12 @@
                 </select>
                 @error('selected_session_id') <span class="text-xs text-red-500">{{ $message }}</span>@enderror
             </div>
-            
+
             {{-- School --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">School *</label>
-                <select wire:model="selected_school_id" class="w-full rounded border-gray-300 @error('selected_school_id') border-red-500 @enderror">
+                <select wire:model="selected_school_id"
+                    class="w-full rounded border-gray-300 @error('selected_school_id') border-red-500 @enderror">
                     <option value="">-- Select School --</option>
                     @foreach($schoolOptions as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
@@ -34,11 +36,12 @@
                 </select>
                 @error('selected_school_id') <span class="text-xs text-red-500">{{ $message }}</span>@enderror
             </div>
-            
+
             {{-- Class --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
-                <select wire:model="selected_myclass_id" class="w-full rounded border-gray-300 @error('selected_myclass_id') border-red-500 @enderror">
+                <select wire:model="selected_myclass_id"
+                    class="w-full rounded border-gray-300 @error('selected_myclass_id') border-red-500 @enderror">
                     <option value="">-- Select Class --</option>
                     @foreach($myclassOptions as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
@@ -46,11 +49,12 @@
                 </select>
                 @error('selected_myclass_id') <span class="text-xs text-red-500">{{ $message }}</span>@enderror
             </div>
-            
+
             {{-- Semester --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Semester *</label>
-                <select wire:model="selected_semester_id" class="w-full rounded border-gray-300 @error('selected_semester_id') border-red-500 @enderror">
+                <select wire:model="selected_semester_id"
+                    class="w-full rounded border-gray-300 @error('selected_semester_id') border-red-500 @enderror">
                     <option value="">-- Select Semester --</option>
                     @foreach($semesterOptions as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
@@ -58,11 +62,12 @@
                 </select>
                 @error('selected_semester_id') <span class="text-xs text-red-500">{{ $message }}</span>@enderror
             </div>
-            
+
             {{-- Exam Detail --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Exam Detail *</label>
-                <select wire:model="selected_exam_detail_id" class="w-full rounded border-gray-300 @error('selected_exam_detail_id') border-red-500 @enderror">
+                <select wire:model="selected_exam_detail_id"
+                    class="w-full rounded border-gray-300 @error('selected_exam_detail_id') border-red-500 @enderror">
                     <option value="">-- Select Exam --</option>
                     @foreach($examDetailOptions as $id => $label)
                         <option value="{{ $id }}">{{ $label }}</option>
@@ -70,11 +75,12 @@
                 </select>
                 @error('selected_exam_detail_id') <span class="text-xs text-red-500">{{ $message }}</span>@enderror
             </div>
-            
+
             {{-- Subject --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                <select wire:model="selected_subject_id" class="w-full rounded border-gray-300 @error('selected_subject_id') border-red-500 @enderror">
+                <select wire:model="selected_subject_id"
+                    class="w-full rounded border-gray-300 @error('selected_subject_id') border-red-500 @enderror">
                     <option value="">-- Select Subject --</option>
                     @foreach($subjectOptions as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
@@ -83,7 +89,7 @@
                 @error('selected_subject_id') <span class="text-xs text-red-500">{{ $message }}</span>@enderror
             </div>
         </div>
-        
+
         <div class="mt-4 text-right">
             <button wire:click="$refresh" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                 Refresh
@@ -139,9 +145,9 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach($group['settings'] as $setting)
                                     <button wire:click="openMarksEntry({{ $setting->id }})" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium
-                                                                    bg-indigo-100 text-indigo-800 border border-indigo-200 
-                                                                    hover:bg-indigo-200 hover:border-indigo-300 transition
-                                                                    shadow-sm" title="Click to enter marks">
+                                                                            bg-indigo-100 text-indigo-800 border border-indigo-200 
+                                                                            hover:bg-indigo-200 hover:border-indigo-300 transition
+                                                                            shadow-sm" title="Click to enter marks">
                                         <span class="font-bold">{{ $setting->subject->subject_code ?? '' }}</span>
                                         <span class="truncate max-w-[120px]">{{ $setting->subject->name ?? 'N/A' }}</span>
                                         <span
@@ -251,7 +257,7 @@
                                                         <td class="px-3 py-2 text-center">
                                                             <span
                                                                 class="px-2 py-1 rounded-full text-xs font-bold
-                                                                                                                                {{ $mark->marks_grade == 'A+' || $mark->marks_grade == 'A' ? 'bg-green-100 text-green-800' :
+                                                                                                                                                        {{ $mark->marks_grade == 'A+' || $mark->marks_grade == 'A' ? 'bg-green-100 text-green-800' :
                                             ($mark->marks_grade == 'F' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800') }}">
                                                                 {{ $mark->marks_grade }}
                                                             </span>
@@ -331,7 +337,7 @@
                                                     @if($marks['grade'])
                                                                     <span
                                                                         class="px-2 py-1 rounded-full text-xs font-bold
-                                                                                                                                                            {{ $marks['grade'] == 'A+' || $marks['grade'] == 'A' ? 'bg-green-100 text-green-800' :
+                                                                                                                                                                                            {{ $marks['grade'] == 'A+' || $marks['grade'] == 'A' ? 'bg-green-100 text-green-800' :
                                                         ($marks['grade'] == 'F' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800') }}">
                                                                         {{ $marks['grade'] }}
                                                                     </span>
