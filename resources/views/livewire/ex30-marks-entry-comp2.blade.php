@@ -7,49 +7,13 @@
     {{-- Filters --}}
     <div class="bg-white p-4 rounded-lg shadow mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {{-- Session --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Session *</label>
-                <select wire:model="selected_session_id"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- Select Session --</option>
-                    @foreach($sessionOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- School --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">School</label>
-                <select wire:model="selected_school_id"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- Select School --</option>
-                    @foreach($schoolOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- MyClass (depends on session) --}}
+            {{-- MyClass (depends on session - auto-selected) --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
                 <select wire:model="selected_myclass_id"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">-- Select Class --</option>
                     @foreach($myclassOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Subject (depends on session and myclass) --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                <select wire:model="selected_subject_id"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- Select Subject --</option>
-                    @foreach($subjectOptions as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
                     @endforeach
                 </select>
@@ -91,9 +55,26 @@
                 </select>
             </div>
 
+            {{-- Subject (depends on session and myclass) --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                <select wire:model="selected_subject_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Select Subject --</option>
+                    @foreach($subjectOptions as $id => $name)
+                        <option value="{{ $id }}">{{ $name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
             {{-- Full Mark --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Full Mark</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Full Mark
+                    @if($selectedExamSetting && $selectedExamSetting->full_mark)
+                        <span class="text-xs text-green-600">(From Setting: {{ $selectedExamSetting->full_mark }})</span>
+                    @endif
+                </label>
                 <input type="number" wire:model="full_mark" min="1"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
@@ -134,12 +115,48 @@
                     <span class="text-blue-700">{{ $selectedExamDetail->examMode->name ?? 'N/A' }}</span>
                 </div>
             </div>
+            
+            {{-- Exam Setting Info --}}
+            @if($selectedExamSetting)
+                <div class="mt-3 pt-3 border-t border-blue-200">
+                    <h4 class="text-xs font-semibold text-blue-900 mb-2">Exam Setting Details:</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                        <div>
+                            <span class="font-medium text-blue-800">Full Mark:</span>
+                            <span class="text-blue-700">{{ $selectedExamSetting->full_mark ?? 'N/A' }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-blue-800">Pass Mark:</span>
+                            <span class="text-blue-700">{{ $selectedExamSetting->pass_mark ?? 'N/A' }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-blue-800">Time (min):</span>
+                            <span class="text-blue-700">{{ $selectedExamSetting->time_in_minutes ?? 'N/A' }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-blue-800">Setting Name:</span>
+                            <span class="text-blue-700">{{ $selectedExamSetting->name ?? 'N/A' }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-blue-800">Setting ID:</span>
+                            <span class="text-blue-700">{{ $exam_setting_id ?? 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="mt-3 pt-3 border-t border-blue-200">
+                    <p class="text-xs text-orange-600">
+                        <strong>Note:</strong> No exam setting found for this combination. Please configure exam settings in Exam Settings module.
+                    </p>
+                </div>
+            @endif
         </div>
     @endif
 
     {{-- Students Table --}}
     <div class="bg-white rounded-lg shadow overflow-hidden">
         @if(count($studentList) > 0)
+            {{-- Show students list (with or without marks entry based on subject selection) --}}
             <form wire:submit.prevent="saveMarks">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -154,8 +171,11 @@
                                 </th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-24">Semester
                                 </th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase w-40">Marks
-                                </th>
+                                @if($selected_subject_id && $selectedExamSetting)
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase w-40">Marks (Max: {{ $full_mark }})</th>
+                                @else
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase w-40">Marks</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -185,9 +205,13 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
-                                        <input type="number" wire:model.defer="marksData.{{ $student['id'] }}.marks_obtained"
-                                            min="0" max="{{ $full_mark }}" step="0.01"
-                                            class="w-24 px-2 py-1 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        @if($selected_subject_id && $selectedExamSetting)
+                                            <input type="number" wire:model.defer="marksData.{{ $student['id'] }}.marks_obtained"
+                                                min="0" max="{{ $full_mark }}" step="0.01"
+                                                class="w-24 px-2 py-1 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        @else
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -198,15 +222,22 @@
                 {{-- Student Count --}}
                 <div class="px-4 py-3 bg-gray-50 text-sm text-gray-600">
                     Showing {{ count($studentList) }} students
+                    @if(!$selected_subject_id)
+                        <span class="text-orange-600">(Select a subject to enable marks entry)</span>
+                    @elseif(!$selectedExamSetting)
+                        <span class="text-red-600">(No exam setting found for this combination)</span>
+                    @endif
                 </div>
 
                 {{-- Save Button --}}
-                <div class="px-4 py-3 bg-gray-100 border-t border-gray-200 flex justify-end">
-                    <button type="submit"
-                        class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-medium">
-                        Save Marks
-                    </button>
-                </div>
+                @if($selected_subject_id && $selectedExamSetting)
+                    <div class="px-4 py-3 bg-gray-100 border-t border-gray-200 flex justify-end">
+                        <button type="submit"
+                            class="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition font-medium">
+                            Save Marks
+                        </button>
+                    </div>
+                @endif
             </form>
         @else
             <div class="px-4 py-12 text-center">
@@ -217,16 +248,12 @@
                 </svg>
                 <h3 class="mt-2 text-sm font-medium text-gray-900">No Students Found</h3>
                 <p class="mt-1 text-sm text-gray-500">
-                    @if(!$selected_session_id)
-                        Please select a session to view students.
-                    @elseif(!$selected_myclass_id)
+                    @if(!$selected_myclass_id)
                         Please select a class to view students.
                     @elseif(!$selected_semester_id)
                         Please select a semester to view students.
                     @elseif(!$selected_exam_detail_id)
                         Please select an exam detail to view students.
-                    @elseif(!$selected_subject_id)
-                        Please select a subject to view students who have that subject.
                     @else
                         No students found matching the selected criteria.
                     @endif
@@ -249,16 +276,15 @@
                 <h3 class="text-sm font-medium text-blue-800">How it works</h3>
                 <div class="mt-2 text-sm text-blue-700">
                     <ul class="list-disc list-inside space-y-1">
-                        <li>Select Session, School, Class, and Semester first</li>
+                        <li>Session and School are auto-selected by default</li>
+                        <li>Select Class, Semester, and Section</li>
                         <li>Select Exam Detail (shows Exam Name, Type, Part, and Mode)</li>
-                        <li>Select Subject - only subjects enrolled by students in the selected class/semester are shown
-                        </li>
-                        <li>Only students in Class Representatives (CR) for the selected session, class, and semester
-                            are shown</li>
-                        <li>Students are filtered based on their subject enrollment (via studentdb_subjects table)</li>
-                        <li>Section filter is optional to further narrow down students</li>
+                        <li>Students list is shown - filtered by selected class/semester/section</li>
+                        <li>Select Subject to enable marks entry for students who have that subject</li>
+                        <li>Exam Setting is auto-loaded when subject is selected (provides full_mark, pass_mark, etc.)</li>
+                        <li>Students are filtered via studentdb_subjects table to show only those enrolled in selected subject</li>
                         <li>Data saved includes: studentcr_id, studentdb_id, myclass_id, section_id, semester_id,
-                            subject_id, exam_detail_id, marks_obtained, percentage, grade</li>
+                            subject_id, exam_detail_id, exam_setting_id, marks_obtained, percentage, grade</li>
                     </ul>
                 </div>
             </div>

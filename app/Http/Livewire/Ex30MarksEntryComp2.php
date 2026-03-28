@@ -47,6 +47,10 @@ class Ex30MarksEntryComp2 extends Component
     
     // Selected exam detail info
     public $selectedExamDetail = null;
+    
+    // Selected exam setting info
+    public $selectedExamSetting = null;
+    public $exam_setting_id = null;
 
     public function mount()
     {
@@ -127,8 +131,8 @@ class Ex30MarksEntryComp2 extends Component
             $this->semesterOptions = [];
         }
 
-        // Exam Detail options - based on session, school, myclass, and semester
-        if ($this->selected_session_id && $this->selected_myclass_id && $this->selected_semester_id) {
+        // Exam Detail options - based on session and school only (exam_details don't have myclass/semester/section)
+        if ($this->selected_session_id) {
             $examDetails = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
                 ->where('session_id', $this->selected_session_id)
                 ->where('school_id', $this->selected_school_id)
@@ -149,30 +153,43 @@ class Ex30MarksEntryComp2 extends Component
             $this->examDetailOptions = [];
         }
 
-        // Subject options - based on session AND myclass (from studentdb subjects)
-        if ($this->selected_session_id && $this->selected_myclass_id) {
-            // Get studentdb_ids from studentcr for this session and myclass
-            $studentcrIds = Bs11Studentcr::where('session_id', $this->selected_session_id)
+        // Subject options - based on myclass AND semester from student enrollment
+        // Get subjects from studentdb_subjects for students in selected class/semester
+        if ($this->selected_myclass_id && $this->selected_semester_id) {
+            // Get studentcr records for this session, myclass, semester (and section if selected)
+            $studentcrQuery = Bs11Studentcr::where('session_id', $this->selected_session_id)
+                ->where('school_id', $this->selected_school_id)
                 ->where('current_myclass_id', $this->selected_myclass_id)
-                ->where('is_active', 1)
-                ->pluck('id');
-
-            $studentDbIds = Bs11Studentcr::whereIn('id', $studentcrIds)
-                ->pluck('studentdb_id')
-                ->toArray();
-
-            // Get subject_ids from studentdb_subjects for these students
-            $subjectIds = Bs12StudentdbSubject::whereIn('studentdb_id', $studentDbIds)
-                ->distinct()
-                ->pluck('subject_id');
-
-            // Get subjects from the subjects table
-            $this->subjectOptions = Bs07Subject::whereIn('id', $subjectIds)
-                ->where('session_id', $this->selected_session_id)
-                ->where('is_active', 1)
-                ->orderBy('name', 'ASC')
-                ->pluck('name', 'id')
-                ->toArray();
+                ->where('current_semester_id', $this->selected_semester_id)
+                ->where('is_active', 1);
+            
+            if ($this->selected_section_id) {
+                $studentcrQuery->where('current_section_id', $this->selected_section_id);
+            }
+            
+            $studentcrs = $studentcrQuery->pluck('studentdb_id')->toArray();
+            
+            if (!empty($studentcrs)) {
+                // Get subject_ids from studentdb_subjects for these students
+                $subjectIds = Bs12StudentdbSubject::whereIn('studentdb_id', $studentcrs)
+                    ->where('is_active', 1)
+                    ->pluck('subject_id')
+                    ->unique()
+                    ->toArray();
+                
+                if (!empty($subjectIds)) {
+                    $this->subjectOptions = Bs07Subject::whereIn('id', $subjectIds)
+                        ->where('session_id', $this->selected_session_id)
+                        ->where('is_active', 1)
+                        ->orderBy('name', 'ASC')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                } else {
+                    $this->subjectOptions = [];
+                }
+            } else {
+                $this->subjectOptions = [];
+            }
         } else {
             $this->subjectOptions = [];
         }
@@ -191,8 +208,10 @@ class Ex30MarksEntryComp2 extends Component
         $this->studentList = [];
         $this->marksData = [];
         $this->selectedExamDetail = null;
+        $this->selectedExamSetting = null;
+        $this->exam_setting_id = null;
 
-        if (!$this->selected_session_id || !$this->selected_myclass_id || !$this->selected_semester_id || !$this->selected_exam_detail_id || !$this->selected_subject_id) {
+        if (!$this->selected_session_id || !$this->selected_myclass_id || !$this->selected_semester_id || !$this->selected_exam_detail_id) {
             return;
         }
         
@@ -200,22 +219,12 @@ class Ex30MarksEntryComp2 extends Component
         $this->selectedExamDetail = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
             ->find($this->selected_exam_detail_id);
 
-        // Get studentdb_ids that have the selected subject
-        $studentDbIdsWithSubject = Bs12StudentdbSubject::where('subject_id', $this->selected_subject_id)
-            ->pluck('studentdb_id')
-            ->toArray();
-
-        if (empty($studentDbIdsWithSubject)) {
-            return;
-        }
-
-        // Get studentcr records matching session, myclass, semester, and having the subject
+        // Get ALL studentcr records matching session, myclass, semester, section
         $query = Bs11Studentcr::with(['studentdb'])
             ->where('session_id', $this->selected_session_id)
             ->where('school_id', $this->selected_school_id)
             ->where('current_myclass_id', $this->selected_myclass_id)
             ->where('current_semester_id', $this->selected_semester_id)
-            ->whereIn('studentdb_id', $studentDbIdsWithSubject)
             ->where('is_active', 1);
 
         // Filter by section if selected
@@ -223,15 +232,57 @@ class Ex30MarksEntryComp2 extends Component
             $query->where('current_section_id', $this->selected_section_id);
         }
 
-        $students = $query->orderBy('roll_no', 'ASC')->get();
+        $allStudents = $query->orderBy('roll_no', 'ASC')->get();
 
-        // Get existing marks for this subject/session/school/exam_detail
-        $existingMarks = Ex30MarksEntry::where('session_id', $this->selected_session_id)
-            ->where('school_id', $this->selected_school_id)
-            ->where('subject_id', $this->selected_subject_id)
-            ->where('exam_detail_id', $this->selected_exam_detail_id)
-            ->get()
-            ->keyBy('studentcr_id');
+        // If subject is selected, filter students who have this subject
+        $students = $allStudents;
+        if ($this->selected_subject_id) {
+            // Load exam setting for this combination
+            $settingQuery = Ex25Settings::where('session_id', $this->selected_session_id)
+                ->where('school_id', $this->selected_school_id)
+                ->where('exam_detail_id', $this->selected_exam_detail_id)
+                ->where('myclass_id', $this->selected_myclass_id)
+                ->where('semester_id', $this->selected_semester_id)
+                ->where('subject_id', $this->selected_subject_id)
+                ->where('is_active', 1);
+            
+            // Try with section first if selected
+            if ($this->selected_section_id) {
+                $this->selectedExamSetting = $settingQuery->where('section_id', $this->selected_section_id)->first();
+            }
+            
+            // If not found with section, try without section
+            if (!$this->selectedExamSetting) {
+                $this->selectedExamSetting = $settingQuery->first();
+            }
+            
+            $this->exam_setting_id = $this->selectedExamSetting ? $this->selectedExamSetting->id : null;
+            
+            // If exam setting has full_mark, use it
+            if ($this->selectedExamSetting && $this->selectedExamSetting->full_mark) {
+                $this->full_mark = $this->selectedExamSetting->full_mark;
+            }
+            
+            // Filter students who have the selected subject (via studentdb_subjects)
+            $studentDbIdsWithSubject = Bs12StudentdbSubject::where('subject_id', $this->selected_subject_id)
+                ->pluck('studentdb_id')
+                ->toArray();
+
+            $students = $allStudents->filter(function($studentcr) use ($studentDbIdsWithSubject) {
+                return in_array($studentcr->studentdb_id, $studentDbIdsWithSubject);
+            });
+        }
+
+        // Get existing marks for this subject/session/school/exam_detail (if subject selected)
+        $existingMarks = collect([]);
+        if ($this->selected_subject_id) {
+            $existingMarks = Ex30MarksEntry::where('session_id', $this->selected_session_id)
+                ->where('school_id', $this->selected_school_id)
+                ->where('subject_id', $this->selected_subject_id)
+                ->where('exam_detail_id', $this->selected_exam_detail_id)
+                ->get()
+                ->keyBy('studentcr_id');
+        }
 
         foreach ($students as $studentcr) {
             $studentDb = $studentcr->studentdb;
@@ -298,7 +349,7 @@ class Ex30MarksEntryComp2 extends Component
                 'semester_id' => $student['semester_id'],
                 'subject_id' => $this->selected_subject_id,
                 'exam_detail_id' => $this->selected_exam_detail_id,
-                'exam_setting_id' => null,
+                'exam_setting_id' => $this->exam_setting_id,
                 'marks_obtained' => $marksObtained,
                 'marks_percentage' => $percentage,
                 'marks_grade' => $grade,
@@ -371,30 +422,40 @@ class Ex30MarksEntryComp2 extends Component
     {
         $this->selected_section_id = '';
         $this->selected_semester_id = '';
-        $this->selected_exam_detail_id = '';
         $this->selected_subject_id = '';
+        $this->selectedExamSetting = null;
+        $this->exam_setting_id = null;
         $this->loadStudents();
     }
 
     public function updatedSelectedSectionId()
     {
+        $this->selected_subject_id = '';
+        $this->selectedExamSetting = null;
+        $this->exam_setting_id = null;
         $this->loadStudents();
     }
 
     public function updatedSelectedSemesterId()
     {
-        $this->selected_exam_detail_id = '';
         $this->selected_subject_id = '';
+        $this->selectedExamSetting = null;
+        $this->exam_setting_id = null;
         $this->loadStudents();
     }
     
     public function updatedSelectedExamDetailId()
     {
+        $this->selected_subject_id = '';
+        $this->selectedExamSetting = null;
+        $this->exam_setting_id = null;
         $this->loadStudents();
     }
 
     public function updatedSelectedSubjectId()
     {
+        $this->selectedExamSetting = null;
+        $this->exam_setting_id = null;
         $this->loadStudents();
     }
 }
