@@ -64,7 +64,22 @@
                 <div class="text-gray-600">
                     @if($activeMenu === 'dashboard')
                         <p>Welcome to your dashboard. Here you can see an overview of your application.</p>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <a href="{{ route('marks-entry2') }}" target="_blank" 
+                               class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                Go to Marks Entry
+                            </a>
 
+                            <a href="{{ route('studentcr') }}" target="_blank" 
+                               class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                Go to Student CR
+                            </a>
+
+                            <a href="{{ route('marks-register') }}" target="_blank" 
+                               class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2, focus:ring-blue-500 transition-colors">
+                                Go to Marks Register
+                            </a>
+                        </div>
                     @elseif($activeMenu === 'basic')
                         <p>Basic management section. Select a submenu option.</p>
                     @elseif($activeMenu === 'exam')

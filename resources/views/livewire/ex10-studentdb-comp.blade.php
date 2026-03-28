@@ -62,7 +62,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($students as $student)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-3 py-2 text-sm text-gray-900">{{ $loop->iteration }}</td>
+                        <td class="px-3 py-2 text-sm text-gray-900">{{ $student->id }}</td>
                         <td class="px-3 py-2 text-sm text-gray-900">
                             {{ $student->student_name ?? 'N/A' }}
                             <span class="text-gray-400 text-xs block">{{ $student->student_code ?? '-' }}</span>
@@ -86,7 +86,7 @@
                                     @foreach($student->studentSubjects as $studentSubject)
                                         <span
                                             class="inline-flex px-2 py-0.5 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
-                                            {{ $studentSubject->subject->name ?? 'N/A' }}
+                                            {{ $studentSubject->subject->subject_code ?? 'N/A' }}
                                         </span>
                                     @endforeach
                                 </div>
@@ -410,4 +410,40 @@
             </div>
         </div>
     @endif
+{{-- 
+    -- 1. Mapping for Birth Certificate Number Column
+INSERT INTO bs12_studentdb_subjects (studentdb_id, subject_id)
+SELECT s.id, sub.id 
+FROM bs10_studentdbs s
+INNER JOIN bs07_subjects sub ON s.birth_certificate_number = sub.subject_code;
+
+-- 2. Mapping for Aadhaar Number Column
+INSERT INTO bs12_studentdb_subjects (studentdb_id, subject_id)
+SELECT s.id, sub.id 
+FROM bs10_studentdbs s
+INNER JOIN bs07_subjects sub ON s.aadhaar_number = sub.subject_code;
+
+-- 3. Mapping for Photo URL Column
+INSERT INTO bs12_studentdb_subjects (studentdb_id, subject_id)
+SELECT s.id, sub.id 
+FROM bs10_studentdbs s
+INNER JOIN bs07_subjects sub ON s.photo_url = sub.subject_code;
+
+-- 4. Mapping for Signature URL Column
+INSERT INTO bs12_studentdb_subjects (studentdb_id, subject_id)
+SELECT s.id, sub.id 
+FROM bs10_studentdbs s
+INNER JOIN bs07_subjects sub ON s.signature_url = sub.subject_code;
+
+-- 5. Mapping for Birth Certificate URL Column
+INSERT INTO bs12_studentdb_subjects (studentdb_id, subject_id)
+SELECT s.id, sub.id 
+FROM bs10_studentdbs s
+INNER JOIN bs07_subjects sub ON s.birth_certificate_url = sub.subject_code;
+
+-- 6. Mapping for Aadhaar URL Column
+INSERT INTO bs12_studentdb_subjects (studentdb_id, subject_id)
+SELECT s.id, sub.id 
+FROM bs10_studentdbs s
+INNER JOIN bs07_subjects sub ON s.aadhaar_url = sub.subject_code; --}}
 </div>

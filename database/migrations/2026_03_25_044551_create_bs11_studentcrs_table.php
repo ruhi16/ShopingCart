@@ -20,7 +20,7 @@ class CreateBs11StudentcrsTable extends Migration
 
             $table->integer('current_myclass_id')->nullable();
             $table->integer('current_section_id')->nullable();
-            $table->integer('current_sememster_id')->nullable();
+            $table->integer('current_semester_id')->nullable();
             $table->integer('current_session_id')->nullable();
 
             $table->integer('previous_studentcr_id')->nullable();

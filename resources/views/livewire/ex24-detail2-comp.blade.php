@@ -75,11 +75,12 @@
                     <div class="flex justify-between items-center">
                         <div class="flex items-center space-x-4">
                             <span class="text-sm font-bold text-gray-700">#{{ $key + 1 }}</span>
-                            <span
-                                class="text-lg font-semibold text-gray-900">Class: {{ $myclassSemester->myclass->name ?? 'N/A' }}</span>
+                            <span class="text-lg font-semibold text-gray-900">Class:
+                                {{ $myclassSemester->myclass->name ?? 'N/A' }}</span>
                             <span class="text-gray-500">-</span>
                             <span
-                                class="text-lg font-semibold text-gray-900">{{ $myclassSemester->semester->name ?? 'N/A' }} Semester</span>
+                                class="text-lg font-semibold text-gray-900">{{ $myclassSemester->semester->name ?? 'N/A' }}
+                                Semester</span>
                         </div>
                         <div class="flex items-center space-x-2">
                             <span
@@ -145,13 +146,17 @@
                                     <tr>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{{ $detailKey + 1 }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                            {{ $detail->examName->name ?? 'N/A' }}</td>
+                                            {{ $detail->examName->name ?? 'N/A' }}
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                            {{ $detail->examType->name ?? 'N/A' }}</td>
+                                            {{ $detail->examType->name ?? 'N/A' }}
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                            {{ $detail->examPart->name ?? 'N/A' }}</td>
+                                            {{ $detail->examPart->name ?? 'N/A' }}
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                                            {{ $detail->examMode->name ?? 'N/A' }}</td>
+                                            {{ $detail->examMode->name ?? 'N/A' }}
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             <span
                                                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $detail->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
@@ -159,16 +164,16 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                            <button wire:click="editExamDetail({{ $detail->id }})" 
+                                            <button wire:click="editExamDetail({{ $detail->id }})"
                                                 class="text-indigo-600 hover:text-indigo-900 mr-3">
                                                 Edit
                                             </button>
-                                            <button wire:click="toggleExamDetailStatus({{ $detail->id }})" 
+                                            <button wire:click="toggleExamDetailStatus({{ $detail->id }})"
                                                 class="text-blue-600 hover:text-blue-900 mr-3">
                                                 {{ $detail->is_active ? 'Deactivate' : 'Activate' }}
                                             </button>
-                                            <button wire:click="deleteExamDetail({{ $detail->id }})" 
-                                                class="text-red-600 hover:text-red-900" 
+                                            <button wire:click="deleteExamDetail({{ $detail->id }})"
+                                                class="text-red-600 hover:text-red-900"
                                                 onclick="return confirm('Are you sure you want to delete this exam detail?')">
                                                 Delete
                                             </button>
@@ -339,101 +344,130 @@
 
     <!-- Edit Modal -->
     @if($isEditModalOpen)
-    <div class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                Edit Exam Detail
-                            </h3>
-                            <div class="mt-4">
-                                <form>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="mb-4">
-                                            <label for="editExamNameId" class="block text-gray-700 text-sm font-bold mb-2">Exam Name:</label>
-                                            <select wire:model.defer="editExamNameId" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                                <option value="">Select Exam Name</option>
-                                                @php
-                                                    $examNames = \App\Models\Ex20Name::active()->get();
-                                                @endphp
-                                                @foreach($examNames as $name)
-                                                    <option value="{{ $name->id }}">{{ $name->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('editExamNameId') <span class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
+        <div class="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div
+                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Edit Exam Detail
+                                </h3>
+                                <div class="mt-4">
+                                    <form>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="mb-4">
+                                                <label for="editExamNameId"
+                                                    class="block text-gray-700 text-sm font-bold mb-2">Exam Name:</label>
+                                                <select wire:model.defer="editExamNameId"
+                                                    class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                                    <option value="">Select Exam Name</option>
+                                                    @php
+                                                        $examNames = \App\Models\Ex20Name::active()->get();
+                                                    @endphp
+                                                    @foreach($examNames as $name)
+                                                        <option value="{{ $name->id }}">{{ $name->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('editExamNameId') <span
+                                                class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
+                                            </div>
+                                            <div class="mb-4">
+                                                <label for="editExamTypeId"
+                                                    class="block text-gray-700 text-sm font-bold mb-2">Exam Type:</label>
+                                                <select wire:model.defer="editExamTypeId"
+                                                    class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                                    <option value="">Select Exam Type</option>
+                                                    @php
+                                                        $examTypes = \App\Models\Ex21Type::active()->get();
+                                                    @endphp
+                                                    @foreach($examTypes as $type)
+                                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('editExamTypeId') <span
+                                                class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
+                                            </div>
+                                            <div class="mb-4">
+                                                <label for="editExamPartId"
+                                                    class="block text-gray-700 text-sm font-bold mb-2">Exam Part:</label>
+                                                <select wire:model.defer="editExamPartId"
+                                                    class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                                    <option value="">Select Exam Part</option>
+                                                    @php
+                                                        $examParts = \App\Models\Ex22Part::all();
+                                                    @endphp
+                                                    @foreach($examParts as $part)
+                                                        <option value="{{ $part->id }}">{{ $part->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('editExamPartId') <span
+                                                class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
+                                            </div>
+                                            <div class="mb-4">
+                                                <label for="editExamModeId"
+                                                    class="block text-gray-700 text-sm font-bold mb-2">Exam Mode:</label>
+                                                <select wire:model.defer="editExamModeId"
+                                                    class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                                    <option value="">Select Exam Mode</option>
+                                                    @php
+                                                        $examModes = \App\Models\Ex23Mode::all();
+                                                    @endphp
+                                                    @foreach($examModes as $mode)
+                                                        <option value="{{ $mode->id }}">{{ $mode->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('editExamModeId') <span
+                                                class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
+                                            </div>
+                                            <div class="mb-4">
+                                                <label for="editIsActive"
+                                                    class="block text-gray-700 text-sm font-bold mb-2">Status:</label>
+                                                <select wire:model.defer="editIsActive"
+                                                    class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                                    <option value="1">Active</option>
+                                                    <option value="0">Inactive</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-4">
+                                                <label for="editRemarks"
+                                                    class="block text-gray-700 text-sm font-bold mb-2">Remarks:</label>
+                                                <input type="text" wire:model.defer="editRemarks"
+                                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                    id="editRemarks">
+                                            </div>
                                         </div>
-                                        <div class="mb-4">
-                                            <label for="editExamTypeId" class="block text-gray-700 text-sm font-bold mb-2">Exam Type:</label>
-                                            <select wire:model.defer="editExamTypeId" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                                <option value="">Select Exam Type</option>
-                                                @php
-                                                    $examTypes = \App\Models\Ex21Type::active()->get();
-                                                @endphp
-                                                @foreach($examTypes as $type)
-                                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('editExamTypeId') <span class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="mb-4">
-                                            <label for="editExamPartId" class="block text-gray-700 text-sm font-bold mb-2">Exam Part:</label>
-                                            <select wire:model.defer="editExamPartId" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                                <option value="">Select Exam Part</option>
-                                                @php
-                                                    $examParts = \App\Models\Ex22Part::all();
-                                                @endphp
-                                                @foreach($examParts as $part)
-                                                    <option value="{{ $part->id }}">{{ $part->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('editExamPartId') <span class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="mb-4">
-                                            <label for="editExamModeId" class="block text-gray-700 text-sm font-bold mb-2">Exam Mode:</label>
-                                            <select wire:model.defer="editExamModeId" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                                <option value="">Select Exam Mode</option>
-                                                @php
-                                                    $examModes = \App\Models\Ex23Mode::all();
-                                                @endphp
-                                                @foreach($examModes as $mode)
-                                                    <option value="{{ $mode->id }}">{{ $mode->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('editExamModeId') <span class="text-red-500 text-xs italic">{{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="mb-4">
-                                            <label for="editIsActive" class="block text-gray-700 text-sm font-bold mb-2">Status:</label>
-                                            <select wire:model.defer="editIsActive" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                                <option value="1">Active</option>
-                                                <option value="0">Inactive</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-4">
-                                            <label for="editRemarks" class="block text-gray-700 text-sm font-bold mb-2">Remarks:</label>
-                                            <input type="text" wire:model.defer="editRemarks" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="editRemarks">
-                                        </div>
-                                    </div>
-                                </form>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button wire:click.prevent="updateExamDetail()" type="button" 
-                        class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                        Update
-                    </button>
-                    <button wire:click="closeEditModal()" type="button" 
-                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
-                    </button>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button wire:click.prevent="updateExamDetail()" type="button"
+                            class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                            Update
+                        </button>
+                        <button wire:click="closeEditModal()" type="button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     @endif
+    {{-- UPDATE "bs10_studentdbs"
+    SET
+    -- 1. Extract the part between 'Subjects: ' and ' |'
+    -- 2. Use a CTE or nested REPLACE to pick items by index
+    birth_certificate_number = TRIM(SUBSTR(remarks, 11, 4)), -- BNGA
+    aadhaar_number = TRIM(SUBSTR(remarks, 17, 4)), -- ENGB
+    photo_url = TRIM(SUBSTR(remarks, 23, 4)), -- EDCN
+    signature_url = TRIM(SUBSTR(remarks, 29, 4)), -- PHIL
+    birth_certificate_url = TRIM(SUBSTR(remarks, 35, 4)), -- POLS
+    aadhaar_url = TRIM(SUBSTR(remarks, 41, 4)) -- HIST
+    WHERE remarks LIKE 'Subjects:%'; --}}
 </div>

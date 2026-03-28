@@ -15,4 +15,12 @@ class Bs05Semester extends Model
     {
         return $query->where('is_active', 1);
     }
+
+    public function admissionSemester()
+    {
+        return $this->hasMany(Bs10Studentdb::class, 'admission_semester_id');
+    }
+
+
+
 }

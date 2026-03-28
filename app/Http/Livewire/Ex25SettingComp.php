@@ -27,18 +27,29 @@ class Ex25SettingComp extends Component
     public $search = '';
     public $perPage = 10;
 
+    // Modal state
+    public $isOpen = false;
+    public $editingSettingId = null;
+
+    // Current exam detail being configured
+    public $currentExamDetailId;
+    public $currentMyclassSemesterId;
+    public $currentExamDetailName;
+    public $currentMyclassName;
+    public $currentSemesterName;
+
+    // Form data for settings
+    public $subjectSettings = [];
+
     // Dropdown options
     public $sessionOptions = [];
     public $schoolOptions = [];
     
-    // Exam detail options for dropdowns
+    // All options for reference
     public $examNames = [];
     public $examTypes = [];
     public $examParts = [];
     public $examModes = [];
-
-    // Form data - keyed by myclassSemesterId_examDetailId_subjectId
-    public $formData = [];
 
     protected function rules()
     {
@@ -75,7 +86,7 @@ class Ex25SettingComp extends Component
         // Load exam details and settings for each combination
         foreach ($myclassSemesters as $item) {
             // Load exam details for this myclass/semester
-            $item->examDetails = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
+            $examDetails = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
                 ->where('myclass_id', $item->myclass_id)
                 ->where('semester_id', $item->semester_id)
                 ->where('session_id', $this->selected_session_id)
@@ -83,22 +94,24 @@ class Ex25SettingComp extends Component
                 ->where('is_active', 1)
                 ->get();
 
-            // Load subjects for this myclass
-            $item->subjects = Bs07Subject::where('session_id', $this->selected_session_id)
-                ->where('school_id', $this->selected_school_id)
-                ->where('is_active', 1)
-                ->orderBy('name', 'ASC')
-                ->get();
-
-            // Load existing settings keyed by myclassSemesterId_examDetailId_subjectId
-            $item->settingsMap = Ex25Settings::where('myclass_id', $item->myclass_id)
-                ->where('semester_id', $item->semester_id)
-                ->where('session_id', $this->selected_session_id)
-                ->where('school_id', $this->selected_school_id)
-                ->get()
-                ->keyBy(function($setting) use ($item) {
-                    return $item->id . '_' . $setting->exam_detail_id . '_' . $setting->subject_id;
-                });
+            // Count settings for each exam detail and add as separate data
+            $detailsWithCount = [];
+            foreach ($examDetails as $examDetail) {
+                // Get all settings for this exam detail with subject relationship
+                $settings = Ex25Settings::with(['subject'])
+                    ->where('exam_detail_id', $examDetail->id)
+                    ->where('session_id', $this->selected_session_id)
+                    ->where('school_id', $this->selected_school_id)
+                    ->where('is_active', 1)
+                    ->get();
+                
+                $detailsWithCount[] = [
+                    'detail' => $examDetail,
+                    'settings_count' => $settings->count(),
+                    'settings' => $settings,
+                ];
+            }
+            $item->examDetailsWithCount = $detailsWithCount;
         }
 
         return view('livewire.ex25-setting-comp', [
@@ -127,117 +140,214 @@ class Ex25SettingComp extends Component
     }
 
     /**
-     * Get form data for a specific setting key
+     * Open modal to configure exam settings for a specific exam detail
      */
-    public function getFormDataValue($key, $field, $default = '')
+    public function configureExamSettings($myclassSemesterId, $examDetailId)
     {
-        return $this->formData[$key][$field] ?? $default;
+        $myclassSemester = Bs09MyclassSemester::with(['myclass', 'semester'])
+            ->findOrFail($myclassSemesterId);
+        
+        $examDetail = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
+            ->findOrFail($examDetailId);
+
+        $this->currentExamDetailId = $examDetailId;
+        $this->currentMyclassSemesterId = $myclassSemesterId;
+        $this->currentExamDetailName = implode(' - ', [
+            $examDetail->examName->name ?? '',
+            $examDetail->examType->name ?? '',
+            $examDetail->examPart->name ?? '',
+            '(' . ($examDetail->examMode->name ?? '') . ')'
+        ]);
+        $this->currentMyclassName = $myclassSemester->myclass->name ?? 'N/A';
+        $this->currentSemesterName = $myclassSemester->semester->name ?? 'N/A';
+        $this->editingSettingId = null;
+
+        // Load subjects for this myclass
+        $this->loadSubjectSettings();
+
+        $this->isOpen = true;
     }
 
     /**
-     * Set form data for a specific setting key
+     * Load subject settings from database
      */
-    public function setFormData($key, $field, $value)
+    private function loadSubjectSettings()
     {
-        if (!isset($this->formData[$key])) {
-            $this->formData[$key] = [];
-        }
-        $this->formData[$key][$field] = $value;
-    }
+        // Get subjects for this myclass
+        $myclassSemester = Bs09MyclassSemester::find($this->currentMyclassSemesterId);
+        $myclassId = $myclassSemester->myclass_id;
 
-    /**
-     * Initialize form data for a specific setting
-     */
-    public function initFormData($myclassSemesterId, $examDetailId, $subjectId, $fullMark = 100, $passMark = 33, $timeMinutes = 60)
-    {
-        $key = $myclassSemesterId . '_' . $examDetailId . '_' . $subjectId;
-        if (!isset($this->formData[$key])) {
-            $this->formData[$key] = [
-                'full_mark' => $fullMark,
-                'pass_mark' => $passMark,
-                'time_in_minutes' => $timeMinutes,
+        $subjects = Bs07Subject::where('session_id', $this->selected_session_id)
+            ->where('school_id', $this->selected_school_id)
+            ->where('is_active', 1)
+            ->orderBy('name', 'ASC')
+            ->get();
+
+        // Get existing settings
+        $existingSettings = Ex25Settings::where('exam_detail_id', $this->currentExamDetailId)
+            ->where('session_id', $this->selected_session_id)
+            ->where('school_id', $this->selected_school_id)
+            ->get()
+            ->keyBy('subject_id');
+
+        $this->subjectSettings = [];
+        foreach ($subjects as $subject) {
+            $existing = $existingSettings->get($subject->id);
+            $this->subjectSettings[] = [
+                'subject_id' => $subject->id,
+                'subject_name' => $subject->name,
+                'subject_code' => $subject->subject_code ?? '',
+                'full_mark' => $existing ? $existing->full_mark : 100,
+                'pass_mark' => $existing ? $existing->pass_mark : 33,
+                'time_in_minutes' => $existing ? $existing->time_in_minutes : 60,
+                'setting_id' => $existing ? $existing->id : null,
+                'is_active' => $existing ? $existing->is_active : true,
             ];
         }
     }
 
     /**
-     * Save settings for a specific exam detail and all its subjects
+     * Edit a specific setting
      */
-    public function saveExamSettings($myclassSemesterId, $examDetailId)
+    public function editSetting($settingId)
     {
-        $myclassSemester = Bs09MyclassSemester::findOrFail($myclassSemesterId);
-        $myclassId = $myclassSemester->myclass_id;
-        $semesterId = $myclassSemester->semester_id;
+        $setting = Ex25Settings::with('subject')->findOrFail($settingId);
+        
+        $this->editingSettingId = $settingId;
+        $this->currentExamDetailId = $setting->exam_detail_id;
+        $this->currentMyclassSemesterId = $setting->myclass_id; // Approximation
+
+        $examDetail = Ex24Detail::with(['examName', 'examType', 'examPart', 'examMode'])
+            ->find($setting->exam_detail_id);
+
+        $this->currentExamDetailName = $examDetail ? implode(' - ', [
+            $examDetail->examName->name ?? '',
+            $examDetail->examType->name ?? '',
+            $examDetail->examPart->name ?? '',
+            '(' . ($examDetail->examMode->name ?? '') . ')'
+        ]) : 'N/A';
+
+        $myclassSemester = Bs09MyclassSemester::with(['myclass', 'semester'])
+            ->where('myclass_id', $setting->myclass_id)
+            ->where('semester_id', $setting->semester_id)
+            ->first();
+
+        $this->currentMyclassName = $myclassSemester->myclass->name ?? 'N/A';
+        $this->currentSemesterName = $myclassSemester->semester->name ?? 'N/A';
+
+        // Load subject settings with only the specific subject
+        $this->subjectSettings = [[
+            'subject_id' => $setting->subject_id,
+            'subject_name' => $setting->subject->name ?? 'N/A',
+            'subject_code' => $setting->subject->subject_code ?? '',
+            'full_mark' => $setting->full_mark,
+            'pass_mark' => $setting->pass_mark,
+            'time_in_minutes' => $setting->time_in_minutes,
+            'setting_id' => $setting->id,
+            'is_active' => $setting->is_active,
+        ]];
+
+        $this->isOpen = true;
+    }
+
+    /**
+     * Close modal
+     */
+    public function closeModal()
+    {
+        $this->isOpen = false;
+        $this->editingSettingId = null;
+        $this->currentExamDetailId = null;
+        $this->currentMyclassSemesterId = null;
+        $this->subjectSettings = [];
+    }
+
+    /**
+     * Save all subject settings for the current exam detail
+     */
+    public function saveSettings()
+    {
+        $this->validate([
+            'selected_session_id' => 'required|exists:sessions,id',
+            'selected_school_id' => 'required|exists:schools,id',
+        ]);
+
+        $myclassSemester = Bs09MyclassSemester::find($this->currentMyclassSemesterId);
+        $myclassId = $myclassSemester->myclass_id ?? null;
+        $semesterId = $myclassSemester->semester_id ?? null;
         $sectionId = null;
 
-        // Get exam detail to check for section
-        $examDetail = Ex24Detail::find($examDetailId);
+        // Get exam detail for section
+        $examDetail = Ex24Detail::find($this->currentExamDetailId);
         if ($examDetail && isset($examDetail->section_id)) {
             $sectionId = $examDetail->section_id;
         }
 
-        // Get subjects for this myclass
-        $subjects = Bs07Subject::where('session_id', $this->selected_session_id)
-            ->where('school_id', $this->selected_school_id)
-            ->where('is_active', 1)
-            ->get();
-
         $savedCount = 0;
 
-        foreach ($subjects as $subject) {
-            $key = $myclassSemesterId . '_' . $examDetailId . '_' . $subject->id;
-            $data = $this->formData[$key] ?? null;
-
-            if (!$data) {
+        foreach ($this->subjectSettings as $setting) {
+            if (!isset($setting['subject_id'])) {
                 continue;
             }
 
-            $fullMark = max(0, (int) ($data['full_mark'] ?? 100));
-            $passMark = min($fullMark, max(0, (int) ($data['pass_mark'] ?? 33)));
-            $timeMinutes = max(0, (int) ($data['time_in_minutes'] ?? 60));
+            $fullMark = max(0, (int) ($setting['full_mark'] ?? 100));
+            $passMark = min($fullMark, max(0, (int) ($setting['pass_mark'] ?? 33)));
+            $timeMinutes = max(0, (int) ($setting['time_in_minutes'] ?? 60));
 
-            // Find existing or create new
-            $existing = Ex25Settings::where('myclass_id', $myclassId)
-                ->where('semester_id', $semesterId)
-                ->where('exam_detail_id', $examDetailId)
-                ->where('subject_id', $subject->id)
-                ->where('session_id', $this->selected_session_id)
-                ->where('school_id', $this->selected_school_id)
-                ->first();
-
-            $settingData = [
-                'name' => 'Setting: ' . $subject->name,
+            $data = [
+                'name' => 'Setting: ' . ($setting['subject_name'] ?? 'Unknown'),
                 'myclass_id' => $myclassId,
                 'section_id' => $sectionId,
                 'semester_id' => $semesterId,
-                'exam_detail_id' => $examDetailId,
-                'subject_id' => $subject->id,
+                'exam_detail_id' => $this->currentExamDetailId,
+                'subject_id' => $setting['subject_id'],
                 'full_mark' => $fullMark,
                 'pass_mark' => $passMark,
                 'time_in_minutes' => $timeMinutes,
                 'session_id' => $this->selected_session_id,
                 'school_id' => $this->selected_school_id,
-                'is_active' => 1,
+                'is_active' => $setting['is_active'] ?? true,
             ];
 
-            if ($existing) {
-                $existing->update($settingData);
+            if (isset($setting['setting_id']) && $setting['setting_id']) {
+                Ex25Settings::where('id', $setting['setting_id'])->update($data);
             } else {
-                Ex25Settings::create($settingData);
+                // Check if setting exists
+                $existing = Ex25Settings::where('exam_detail_id', $this->currentExamDetailId)
+                    ->where('subject_id', $setting['subject_id'])
+                    ->where('session_id', $this->selected_session_id)
+                    ->where('school_id', $this->selected_school_id)
+                    ->first();
+
+                if ($existing) {
+                    $existing->update($data);
+                } else {
+                    Ex25Settings::create($data);
+                }
             }
 
             $savedCount++;
         }
 
         session()->flash('message', "Successfully saved {$savedCount} settings.");
+        $this->closeModal();
     }
 
     /**
-     * Delete all settings for a specific exam detail
+     * Delete a specific setting
      */
-    public function deleteExamSettings($myclassSemesterId, $examDetailId)
+    public function deleteSetting($settingId)
     {
-        $myclassSemester = Bs09MyclassSemester::findOrFail($myclassSemesterId);
+        Ex25Settings::find($settingId)->delete();
+        session()->flash('message', 'Setting deleted successfully.');
+    }
+
+    /**
+     * Delete all settings for an exam detail
+     */
+    public function deleteAllSettingsForExamDetail($myclassSemesterId, $examDetailId)
+    {
+        $myclassSemester = Bs09MyclassSemester::find($myclassSemesterId);
         $myclassId = $myclassSemester->myclass_id;
         $semesterId = $myclassSemester->semester_id;
 
@@ -251,18 +361,28 @@ class Ex25SettingComp extends Component
         session()->flash('message', "Deleted {$deleted} settings.");
     }
 
-    public function updatedSearch()
+    /**
+     * Toggle setting status
+     */
+    public function toggleStatus($settingId)
+    {
+        $setting = Ex25Settings::find($settingId);
+        $setting->update(['is_active' => !$setting->is_active]);
+        session()->flash('message', 'Status updated successfully.');
+    }
+
+    public function updatingSearch()
     {
         $this->resetPage();
     }
 
     public function updatedSelectedSessionId()
     {
-        $this->formData = []; // Reset form data when filters change
+        $this->resetPage();
     }
 
     public function updatedSelectedSchoolId()
     {
-        $this->formData = []; // Reset form data when filters change
+        $this->resetPage();
     }
 }
