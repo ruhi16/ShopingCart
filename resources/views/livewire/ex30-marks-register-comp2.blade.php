@@ -1,283 +1,388 @@
-<div class="p-6">
-    {{-- Header --}}
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Marks Register - Class Wise</h2>
+<div class="p-4">
 
     {{-- Filters --}}
-    <div class="bg-white p-4 rounded-lg shadow mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Session *</label>
-                <select wire:model="selected_session_id" class="w-full rounded border-gray-300">
-                    <option value="">-- Select Session --</option>
-                    @foreach($sessionOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">School *</label>
-                <select wire:model="selected_school_id" class="w-full rounded border-gray-300">
-                    <option value="">-- Select School --</option>
-                    @foreach($schoolOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Class *</label>
-                <select wire:model="selected_myclass_id" class="w-full rounded border-gray-300">
-                    <option value="">-- Select Class --</option>
-                    @foreach($myclassOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Semester *</label>
-                <select wire:model="selected_semester_id" class="w-full rounded border-gray-300">
-                    <option value="">-- Select Semester --</option>
-                    @foreach($semesterOptions as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
+    <div class="flex flex-wrap items-end gap-3 mb-4">
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Class</label>
+            <select wire:model="selected_myclass_id"
+                    class="text-sm rounded border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-300">
+                <option value="">— Select Class —</option>
+                @foreach($myclassOptions as $id => $name)
+                    <option value="{{ $id }}">{{ $name }}</option>
+                @endforeach
+            </select>
         </div>
-        
-        {{-- Search Box --}}
-        <div class="mt-4">
-            <div class="flex items-center space-x-2">
-                <input 
-                    type="text" 
-                    wire:model.debounce.300ms="search" 
-                    placeholder="Search by student name..." 
-                    class="flex-1 rounded border-gray-300"
-                />
-                <button 
-                    wire:click="resetFilters" 
-                    class="px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-                >
-                    Reset Filters
-                </button>
-            </div>
+
+        @if($selected_myclass_id)
+        <div class="flex-1 min-w-[180px]">
+            <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Search</label>
+            <input type="text"
+                   wire:model.debounce.300ms="search"
+                   placeholder="Student name…"
+                   class="w-full text-sm rounded border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-300" />
+        </div>
+        @endif
+
+        <button wire:click="resetFilters"
+                class="text-xs px-3 py-2 rounded border border-gray-300 text-gray-500 hover:bg-gray-100 transition">
+            Reset
+        </button>
+    </div>
+
+    {{-- Main Table --}}
+    @if(isset($students) && count($students) > 0 && isset($examDetails) && is_countable($examDetails) && count($examDetails) > 0)
+
+    {{-- Pre-compute footer stats --}}
+    @php
+        $totalStudents  = count($students);
+        $totalMarkCount = 0;
+        $sumPct         = 0;
+        $passCount      = 0;
+
+        foreach ($students as $student) {
+            foreach ($this->marksData[$student->id] ?? [] as $subjectMarks) {
+                foreach ($subjectMarks['exam_marks'] ?? [] as $em) {
+                    if (isset($em['marks_obtained']) && $em['marks_obtained'] !== null && !$em['is_absent']) {
+                        $totalMarkCount++;
+                        $pct = $em['full_mark'] > 0
+                            ? round(($em['marks_obtained'] / $em['full_mark']) * 100, 1)
+                            : 0;
+                        $sumPct += $pct;
+                        if ($pct >= 40) $passCount++;
+                    }
+                }
+            }
+        }
+
+        $avgPercentage  = $totalMarkCount > 0 ? round($sumPct / $totalMarkCount, 1) : 0;
+        $passPercentage = $totalMarkCount > 0 ? round(($passCount / $totalMarkCount) * 100, 1) : 0;
+    @endphp
+
+    <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full border-collapse text-xs">
+
+            {{-- THEAD --}}
+            <thead>
+                <tr class="bg-blue-50">
+                    <th class="px-3 py-2 text-left font-medium text-blue-700 uppercase tracking-wide border-b border-r border-blue-200 w-10">
+                        Roll
+                    </th>
+                    <th class="px-3 py-2 text-left font-medium text-blue-700 uppercase tracking-wide border-b border-r border-blue-200 min-w-[130px]">
+                        Student
+                    </th>
+                    <th class="px-3 py-2 text-left font-medium text-blue-700 uppercase tracking-wide border-b border-r border-blue-200 min-w-[80px]">
+                        Subject
+                    </th>
+
+                    @foreach($examDetails as $examDetail)
+                    <th class="px-3 py-1 text-center border-b border-r border-blue-200 bg-blue-50 min-w-[80px]">
+                        <div class="font-semibold text-blue-800 text-xs">
+                            {{ $examDetail->examName->name ?? '—' }}
+                        </div>
+                        <div class="text-blue-500 font-normal" style="font-size:18px">
+                            {{ $examDetail->semester->name ?? '' }}
+                            &nbsp;·&nbsp;
+                            {{ $examDetail->examType->name ?? '' }}
+                            &nbsp;·&nbsp;
+                            {{ $examDetail->examMode->name ?? '' }}
+                        </div>
+                    </th>
+                    @endforeach
+
+                    <th class="px-3 py-2 text-center font-medium text-green-700 uppercase tracking-wide border-b border-r border-green-200 bg-green-50 min-w-[80px]">
+                        Sub Total
+                    </th>
+                    <th class="px-3 py-2 text-center font-medium text-blue-800 uppercase tracking-wide border-b border-blue-300 bg-blue-100 min-w-[90px]"
+                        style="border-left:2px solid #93c5fd">
+                        Overall&nbsp;/&nbsp;Result
+                    </th>
+                </tr>
+            </thead>
+
+            {{-- TBODY --}}
+            <tbody class="divide-y divide-gray-100">
+                @foreach($students as $student)
+                @php
+                    $studentSubjects = isset($this->marksData[$student->id])
+                        ? array_keys($this->marksData[$student->id]) : [];
+                    $subjectCount = count($studentSubjects);
+                    $rowspan      = max(1, $subjectCount);
+
+                    // Find the additional subject: the one with the lowest total obtained marks
+                    $subjectTotals = [];
+                    foreach ($studentSubjects as $sid) {
+                        $sm  = $this->marksData[$student->id][$sid] ?? [];
+                        $obt = 0;
+                        foreach ($sm['exam_marks'] ?? [] as $em) {
+                            if (isset($em['marks_obtained']) && $em['marks_obtained'] !== null && !$em['is_absent']) {
+                                $obt += $em['marks_obtained'];
+                            }
+                        }
+                        $subjectTotals[$sid] = $obt;
+                    }
+                    $additionalSubjectId = null;
+                    if (!empty($subjectTotals)) {
+                        $minVal = min($subjectTotals);
+                        foreach ($subjectTotals as $sid => $val) {
+                            if ($val == $minVal) {
+                                $additionalSubjectId = $sid;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Overall total: exclude additional subject, fixed out of 500
+                    $overallObt  = 0;
+                    $overallFull = 500;
+                    foreach ($studentSubjects as $sid) {
+                        if ($sid == $additionalSubjectId) continue;
+                        $sm = $this->marksData[$student->id][$sid] ?? [];
+                        foreach ($sm['exam_marks'] ?? [] as $em) {
+                            if (isset($em['marks_obtained']) && $em['marks_obtained'] !== null && !$em['is_absent']) {
+                                $overallObt += $em['marks_obtained'];
+                            }
+                        }
+                    }
+                    $overallPct   = $overallFull > 0 ? round(($overallObt / $overallFull) * 100, 1) : 0;
+                    $overallGrade = $this->calculateGrade($overallPct);
+                    $overallPass  = $overallPct >= 40;
+                @endphp
+
+                @if($subjectCount > 0)
+                    @foreach($studentSubjects as $subjIndex => $subjectId)
+                    @php
+                        $subjectMarks = $this->marksData[$student->id][$subjectId] ?? null;
+                        $subjectInfo  = $subjectMarks['subject_info'] ?? null;
+                        $isFirst      = ($subjIndex === 0);
+                        $isAdditional = ($subjectId == $additionalSubjectId);
+
+                        // Subject sub-total (fixed full marks = 100)
+                        $subjObt  = 0;
+                        $subjFull = 100;
+                        foreach ($examDetails as $ed) {
+                            $md = $subjectMarks['exam_marks'][$ed->id] ?? null;
+                            if ($md && isset($md['marks_obtained']) && $md['marks_obtained'] !== null && !$md['is_absent']) {
+                                $subjObt += $md['marks_obtained'];
+                            }
+                        }
+                        $subjPct   = $subjFull > 0 ? round(($subjObt / $subjFull) * 100, 1) : 0;
+                        $subjGrade = $this->calculateGrade($subjPct);
+
+                        // Grade badge class — switch for PHP 7.4 compatibility
+                        switch ($subjGrade) {
+                            case 'A+': $subjGradeClass = 'bg-blue-200 text-blue-900'; break;
+                            case 'A':  $subjGradeClass = 'bg-blue-100 text-blue-800'; break;
+                            case 'B+': $subjGradeClass = 'bg-teal-100 text-teal-800'; break;
+                            case 'B':  $subjGradeClass = 'bg-teal-50 text-teal-700';  break;
+                            case 'C':  $subjGradeClass = 'bg-yellow-100 text-yellow-800'; break;
+                            case 'D':  $subjGradeClass = 'bg-orange-100 text-orange-700'; break;
+                            case 'F':  $subjGradeClass = 'bg-red-100 text-red-700';   break;
+                            default:   $subjGradeClass = 'bg-gray-100 text-gray-600'; break;
+                        }
+
+                        // Overall grade badge class
+                        switch ($overallGrade) {
+                            case 'A+': $overallGradeClass = 'bg-blue-200 text-blue-900'; break;
+                            case 'A':  $overallGradeClass = 'bg-blue-100 text-blue-800'; break;
+                            case 'B+': $overallGradeClass = 'bg-teal-100 text-teal-800'; break;
+                            case 'B':  $overallGradeClass = 'bg-teal-50 text-teal-700';  break;
+                            case 'C':  $overallGradeClass = 'bg-yellow-100 text-yellow-800'; break;
+                            case 'D':  $overallGradeClass = 'bg-orange-100 text-orange-700'; break;
+                            case 'F':  $overallGradeClass = 'bg-red-100 text-red-700';   break;
+                            default:   $overallGradeClass = 'bg-gray-100 text-gray-600'; break;
+                        }
+                    @endphp
+
+                    <tr class="{{ $isFirst ? 'bg-gray-50 border-t-2 border-gray-300' : 'bg-white' }} hover:bg-blue-50/40 transition">
+
+                        @if($isFirst)
+                        <td rowspan="{{ $rowspan }}"
+                            class="px-3 py-2 text-gray-400 font-medium border-r border-gray-200 align-top"
+                            style="font-size:11px;padding-top:10px">
+                            {{ $student->roll_no }}
+                        </td>
+                        <td rowspan="{{ $rowspan }}"
+                            class="px-3 py-2 border-r border-gray-200 align-top"
+                            style="padding-top:10px">
+                            <div class="font-medium text-gray-800" style="font-size:13px">
+                                {{ $student->studentdb->student_name ?? '—' }}
+                            </div>
+                            <div class="text-gray-400" style="font-size:18px">
+                                {{ $student->currentMyclass->name ?? '' }}
+                                {{ $student->currentSection->name ?? '' }}
+                            </div>
+                        </td>
+                        @endif
+
+                        {{-- Subject cell --}}
+                        <td class="px-3 py-2 border-r border-gray-200 {{ $isAdditional ? 'bg-amber-50' : 'bg-purple-50' }}">
+                            <span class="inline-block rounded px-2 py-0.5 font-medium
+                                         {{ $isAdditional ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800' }}"
+                                  style="font-size:16px; font-weight:500">
+                                {{ $subjectInfo->subject->short_name
+                                   ?? $subjectInfo->subject->name
+                                   ?? 'Subj '.$subjectId }}
+                            </span>
+                            @if($isAdditional)
+                                <span class="inline-block rounded px-1 ml-1 font-medium bg-amber-200 text-amber-900"
+                                      style="font-size:9px">Addl</span>
+                            @endif
+                        </td>
+
+                        {{-- Single marks column per exam: integer_obt/max --}}
+                        @foreach($examDetails as $examDetail)
+                        @php $md = $subjectMarks['exam_marks'][$examDetail->id] ?? null; @endphp
+                        <td class="px-2 py-2 text-center border-r border-gray-100
+                                   {{ ($md && isset($md['is_absent']) && $md['is_absent']) ? 'bg-red-50' : '' }}">
+                            @if(!$md || !isset($md['exam_setting_id']) || !$md['exam_setting_id'])
+                                <span class="text-gray-300">—</span>
+                            @elseif(isset($md['is_absent']) && $md['is_absent'])
+                                <span class="inline-block text-red-700 bg-red-100 rounded px-1"
+                                      style="font-size:18px;font-weight:500">AB</span>
+                            @elseif(isset($md['marks_obtained']) && $md['marks_obtained'] !== null)
+                                <span class="font-bold text-blue-800" style="font-size:18px">
+                                    {{ (int) round($md['marks_obtained']) }}
+                                </span>
+                                <span class="text-gray-400">/{{ $md['full_mark'] }}</span>
+                            @else
+                                <span class="text-gray-300">—</span>
+                            @endif
+                        </td>
+                        @endforeach
+
+                        {{-- Subject sub-total --}}
+                        <td class="px-3 py-2 text-center bg-green-50 border-r border-green-100">
+                            <div class="font-medium text-green-800" style="font-size:18px">{{ (int) round($subjObt) }}/{{ $subjFull }}</div>
+                            <div class="text-green-600" style="font-size:12px">{{ $subjPct }}%</div>
+                            <span class="inline-block rounded px-1.5 font-medium {{ $subjGradeClass }}"
+                                  style="font-size:12px;margin-top:2px">
+                                {{ $subjGrade }}
+                            </span>
+                        </td>
+
+                        {{-- Overall / Result — rowspan on first subject row only --}}
+                        @if($isFirst)
+                        <td rowspan="{{ $rowspan }}"
+                            class="px-3 py-2 text-center align-middle bg-blue-50"
+                            style="border-left:2px solid #93c5fd">
+                            <div class="font-bold text-blue-900" style="font-size:18px">
+                                {{ (int) round($overallObt) }}/{{ $overallFull }}
+                            </div>
+                            <div class="text-blue-600" style="font-size:18px">{{ $overallPct }}%</div>
+                            <span class="inline-block rounded px-2 font-medium {{ $overallGradeClass }} mt-1"
+                                  style="font-size:18px">
+                                {{ $overallGrade }}
+                            </span>
+                            <div class="mt-1">
+                                @if($overallPass)
+                                    <span class="inline-block rounded px-2 py-0.5 font-medium bg-green-200 text-green-900"
+                                          style="font-size:11px">PASS</span>
+                                @else
+                                    <span class="inline-block rounded px-2 py-0.5 font-medium bg-red-200 text-red-900"
+                                          style="font-size:11px">FAIL</span>
+                                @endif
+                            </div>
+                        </td>
+                        @endif
+
+                    </tr>
+                    @endforeach
+
+                @else
+                {{-- No subjects enrolled --}}
+                <tr class="bg-gray-50">
+                    <td class="px-3 py-2 text-gray-400 font-medium border-r border-gray-200"
+                        style="font-size:11px">{{ $student->roll_no }}</td>
+                    <td class="px-3 py-2 border-r border-gray-200">
+                        <div class="font-medium text-gray-800" style="font-size:13px">
+                            {{ $student->studentdb->student_name ?? '—' }}
+                        </div>
+                    </td>
+                    <td colspan="{{ count($examDetails) + 2 }}"
+                        class="px-3 py-2 text-center text-gray-400 italic">
+                        No subjects enrolled
+                    </td>
+                </tr>
+                @endif
+
+                @endforeach
+            </tbody>
+
+            {{-- TFOOT --}}
+            <tfoot>
+                <tr class="bg-blue-100 border-t-2 border-blue-300">
+                    <td colspan="3"
+                        class="px-3 py-2 text-right font-medium text-blue-700 border-r border-blue-200"
+                        style="font-size:11px">
+                        Class overview &mdash; {{ $totalStudents }} students
+                    </td>
+
+                    @foreach($examDetails as $examDetail)
+                    @php
+                        $examObt   = 0;
+                        $examFull  = 0;
+                        $examCount = 0;
+                        foreach ($students as $student) {
+                            foreach ($this->marksData[$student->id] ?? [] as $sm) {
+                                $em = $sm['exam_marks'][$examDetail->id] ?? null;
+                                if ($em && isset($em['marks_obtained']) && $em['marks_obtained'] !== null && !$em['is_absent']) {
+                                    $examObt  += $em['marks_obtained'];
+                                    $examFull += $em['full_mark'];
+                                    $examCount++;
+                                }
+                            }
+                        }
+                        $examAvgPct = $examFull > 0 ? round(($examObt / $examFull) * 100, 1) : 0;
+                    @endphp
+                    <td class="px-2 py-2 text-center text-blue-800 border-r border-blue-200"
+                        style="font-size:11px">
+                        avg {{ $examAvgPct }}%
+                    </td>
+                    @endforeach
+
+                    <td class="px-3 py-2 text-center font-medium text-green-800 bg-green-100 border-r border-green-200"
+                        style="font-size:11px">
+                        avg {{ $avgPercentage }}%
+                    </td>
+                    <td class="px-3 py-2 text-center font-medium text-blue-900 bg-blue-200"
+                        style="font-size:11px;border-left:2px solid #93c5fd">
+                        Pass {{ $passPercentage }}%<br>
+                        <span class="font-normal text-blue-700">{{ $passCount }}/{{ $totalMarkCount }}</span>
+                    </td>
+                </tr>
+            </tfoot>
+
+        </table>
+    </div>
+
+    {{-- Summary stat cards --}}
+    <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3">
+            <div class="text-xs text-blue-500 uppercase tracking-wide mb-1">Students</div>
+            <div class="text-2xl font-semibold text-blue-800">{{ $totalStudents }}</div>
+        </div>
+        <div class="rounded-lg bg-purple-50 border border-purple-100 px-4 py-3">
+            <div class="text-xs text-purple-500 uppercase tracking-wide mb-1">Exams</div>
+            <div class="text-2xl font-semibold text-purple-800">{{ count($examDetails) }}</div>
+        </div>
+        <div class="rounded-lg bg-green-50 border border-green-100 px-4 py-3">
+            <div class="text-xs text-green-600 uppercase tracking-wide mb-1">Class avg</div>
+            <div class="text-2xl font-semibold text-green-800">{{ $avgPercentage }}%</div>
+        </div>
+        <div class="rounded-lg bg-amber-50 border border-amber-100 px-4 py-3">
+            <div class="text-xs text-amber-600 uppercase tracking-wide mb-1">Pass rate</div>
+            <div class="text-2xl font-semibold text-amber-800">{{ $passPercentage }}%</div>
         </div>
     </div>
 
-    {{-- Marks Register Table with Sub-rows --}}
-    @if(count($students) > 0 && count($examDetails) > 0)
-        <div class="bg-white rounded-lg shadow overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        {{-- Student Info Columns (5 columns) --}}
-                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Roll No</th>
-                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Student Name</th>
-                        {{-- <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Class</th> --}}
-                        {{-- <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Section</th> --}}
-                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Subjects</th>
-                        
-                        {{-- Exam Detail Headers --}}
-                        @foreach($examDetails as $index => $examDetail)
-                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase border-t border-l border-r bg-blue-50 {{ $loop->first ? '' : 'border-l-2' }}">
-                                <div class="font-bold">{{ $examDetail->examName->name ?? 'N/A' }}</div>
-                                <div class="text-xs">{{ $examDetail->examType->name ?? 'N/A' }}</div>
-                                <div class="text-xs">{{ $examDetail->examPart->name ?? 'N/A' }} • {{ $examDetail->examMode->name ?? 'N/A' }}</div>
-                            </th>
-                        @endforeach
-                        
-                        {{-- Total & Grade Column --}}
-                        <th rowspan="2" class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase border-t border-b border-r bg-green-50">Subject Total / Grade</th>
-                    </tr>
-                    
-                    <tr>
-                        {{-- Empty row for alignment --}}
-                        @foreach($examDetails as $examDetail)
-                            <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase border border-gray-300 bg-gray-100">
-                                Marks Obtained
-                            </th>
-                        @endforeach
-                    </tr>
-                </thead>
-                
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($students as $student)
-                        @php
-                            // Get subjects for this student from marksData
-                            $studentSubjects = isset($this->marksData[$student->id]) ? array_keys($this->marksData[$student->id]) : [];
-                            $subjectCount = count($studentSubjects);
-                            $rowspan = max(1, $subjectCount);
-                        @endphp
-                        
-                        {{-- First Subject Row (with student info) --}}
-                        @if($subjectCount > 0)
-                            @foreach($studentSubjects as $subjIndex => $subjectId)
-                                @php
-                                    $subjectMarks = $this->marksData[$student->id][$subjectId] ?? null;
-                                    $subjectInfo = $subjectMarks['subject_info'] ?? null;
-                                    $isFirstRow = ($subjIndex === 0);
-                                @endphp
-                                
-                                <tr class="{{ $isFirstRow ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50 border-t border-gray-200' }}">
-                                    @if($isFirstRow)
-                                        {{-- Student Info (only in first subject row) --}}
-                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm font-bold text-gray-900 border-r align-top">{{ $student->roll_no }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm font-bold text-gray-900 border-r align-top">
-                                            {{ $student->studentdb->student_name ?? 'N/A' }}<br/>
-                                            {{ $student->currentMyclass->name ?? 'N/A' }}
-                                            {{ $student->currentSection->name ?? 'N/A' }} <br/>
-                                            {{ $student->currentSemester->name ?? 'N/A' }} Semester
-
-                                        </td>
-
-                                        {{-- <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentMyclass->name ?? 'N/A' }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentSection->name ?? 'N/A' }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentSemester->name ?? 'N/A' }}</td> --}}
-                                    @endif
-                                    
-                                    {{-- Subject Name --}}
-                                    <td class="px-3 py-2 text-sm font-semibold text-gray-800 border-r {{ !$isFirstRow ? 'bg-gray-50' : '' }}">
-                                        <div class="flex items-center">
-                                            <span class="font-bold">{{ $subjectInfo->subject->short_name ?? $subjectInfo->subject->name ?? 'Subject ' . $subjectId }}</span>
-                                            {{-- @if($isFirstRow)
-                                                <span class="ml-2 text-xs text-gray-500">({{ $subjectCount }} subjects total)</span>
-                                            @endif --}}
-                                        </div>
-                                    </td>
-                                    
-                                    {{-- Marks for each exam --}}
-                                    @foreach($examDetails as $examDetail)
-                                        @php
-                                            $markData = $subjectMarks['exam_marks'][$examDetail->id] ?? null;
-                                        @endphp
-                                        <td class="px-2 py-2 text-center text-sm border border-gray-300 {{ $markData && $markData['is_absent'] ? 'bg-red-50' : '' }} {{ $markData && !$markData['is_absent'] ? 'bg-green-50' : '' }}">
-                                            
-                                            @if($markData && isset($markData['exam_setting_id']) && $markData['exam_setting_id'])
-                                                @if($markData['is_absent'])
-                                                    <span class="text-red-600 font-bold text-xs">ABSENT</span>
-                                                @elseif(isset($markData['marks_obtained']) && $markData['marks_obtained'] !== null)
-                                                    <div class="text-xs font-bold text-blue-800">{{ number_format($markData['marks_obtained'], 2) }}</div>
-                                                    <div class="text-xs text-gray-600">/{{ $markData['full_mark'] }}</div>
-                                                    <div class="text-xs font-semibold {{ $markData['grade'] == 'F' ? 'text-red-600' : 'text-green-600' }}">{{ $markData['grade'] }}</div>
-                                                @else
-                                                    <span class="text-gray-400 text-xs">-</span>
-                                                @endif
-                                            @else
-                                                <span class="text-gray-300 text-xs">N/A</span>
-                                            @endif
-                                        </td>
-                                    @endforeach
-                                    
-                                    {{-- Subject Total --}}
-                                    @php
-                                        $subjTotal = 0;
-                                        $subjFull = 0;
-                                        foreach($examDetails as $examDetail) {
-                                            $md = $subjectMarks['exam_marks'][$examDetail->id] ?? null;
-                                            if($md && isset($md['marks_obtained']) && $md['marks_obtained'] !== null && !$md['is_absent']) {
-                                                $subjTotal += $md['marks_obtained'];
-                                                $subjFull += $md['full_mark'];
-                                            }
-                                        }
-                                        $subjPct = $subjFull > 0 ? round(($subjTotal / $subjFull) * 100, 2) : 0;
-                                        $subjGrade = $this->calculateGrade($subjPct);
-                                    @endphp
-                                    <td class="px-3 py-2 text-center text-sm font-bold border border-gray-300 bg-green-50 align-top" {{ $isFirstRow ? 'rowspan="' . $rowspan . '"' : '' }}>
-                                        @if($isFirstRow)
-                                            <div class="text-xs text-gray-600 mb-1">Per Subject Average:</div>
-                                        @endif
-                                        <div>{{ number_format($subjTotal, 2) }}/{{ $subjFull }}</div>
-                                        <div class="text-xs">{{ $subjPct }}%</div>
-                                        <div class="text-sm font-bold {{ $subjGrade == 'F' ? 'text-red-600' : 'text-green-600' }}">{{ $subjGrade }}</div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
-                            {{-- No subjects for this student --}}
-                            <tr>
-                                <td class="px-3 py-2 text-sm font-bold text-gray-900 border-r">{{ $student->roll_no }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-900 border-r">{{ $student->studentdb->student_name ?? 'N/A' }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-900 border-r">{{ $student->currentMyclass->name ?? 'N/A' }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-900 border-r">{{ $student->currentSection->name ?? 'N/A' }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-900 border-r">{{ $student->currentSemester->name ?? 'N/A' }}</td>
-                                <td colspan="{{ count($examDetails) + 1 }}" class="px-3 py-2 text-center text-sm text-gray-400 border border-gray-300">
-                                    No subjects opted
-                                </td>
-                            </tr>
-                        @endif
-                    @endforeach
-                </tbody>
-                
-                {{-- Summary Footer --}}
-                <tfoot class="bg-gray-100 font-bold">
-                    <tr>
-                        <td colspan="5" class="px-3 py-3 text-right text-sm text-gray-700 border-r border-b">Overall Class Statistics:</td>
-                        @php
-                            $totalStudents = count($students);
-                            $avgPercentage = 0;
-                            $passCount = 0;
-                            foreach($students as $student) {
-                                foreach($this->marksData[$student->id] ?? [] as $subjectId => $subjectMarks) {
-                                    foreach($subjectMarks['exam_marks'] ?? [] as $examMark) {
-                                        if(isset($examMark['percentage'])) {
-                                            $avgPercentage += $examMark['percentage'];
-                                            if($examMark['percentage'] >= 40) $passCount++;
-                                        }
-                                    }
-                                }
-                            }
-                            $totalMarks = 0;
-                            foreach($students as $student) {
-                                foreach($this->marksData[$student->id] ?? [] as $subjectId => $subjectMarks) {
-                                    foreach($subjectMarks['exam_marks'] ?? [] as $examMark) {
-                                        if(isset($examMark['marks_obtained']) && $examMark['marks_obtained'] !== null) {
-                                            $totalMarks++;
-                                        }
-                                    }
-                                }
-                            }
-                            $avgPercentage = $totalMarks > 0 ? round($avgPercentage / $totalMarks, 2) : 0;
-                            $passPercentage = $totalMarks > 0 ? round(($passCount / $totalMarks) * 100, 2) : 0;
-                        @endphp
-                        @foreach($examDetails as $examDetail)
-                            <td class="px-2 py-2 text-center text-xs border border-gray-300 bg-gray-200">
-                                <div class="text-xs">Avg: {{ $avgPercentage }}%</div>
-                            </td>
-                        @endforeach
-                        <td class="px-3 py-2 text-center text-sm border border-gray-300 bg-green-100">
-                            <div class="text-xs">Pass Rate: {{ $passPercentage }}%</div>
-                            <div class="text-xs">{{ $passCount }}/{{ $totalMarks }}</div>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-        
-        {{-- Summary Statistics Cards --}}
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-blue-50 p-4 rounded-lg shadow">
-                <div class="text-sm text-gray-600">Total Students</div>
-                <div class="text-2xl font-bold text-blue-800">{{ count($students) }}</div>
-            </div>
-            <div class="bg-purple-50 p-4 rounded-lg shadow">
-                <div class="text-sm text-gray-600">Total Exams</div>
-                <div class="text-2xl font-bold text-purple-800">{{ count($examDetails) }}</div>
-            </div>
-            <div class="bg-green-50 p-4 rounded-lg shadow">
-                <div class="text-sm text-gray-600">Class Average</div>
-                <div class="text-2xl font-bold text-green-800">{{ $avgPercentage }}%</div>
-            </div>
-            <div class="bg-yellow-50 p-4 rounded-lg shadow">
-                <div class="text-sm text-gray-600">Pass Percentage</div>
-                <div class="text-2xl font-bold text-yellow-800">{{ $passPercentage }}%</div>
-            </div>
-        </div>
-    @elseif($selected_session_id && $selected_school_id && $selected_myclass_id && $selected_semester_id)
-        <div class="bg-white p-6 rounded-lg shadow text-center">
-            <p class="text-gray-500">No data found for the selected filters.</p>
-            <p class="text-sm text-gray-400 mt-2">Make sure students are enrolled in this class/semester and have opted for subjects.</p>
-        </div>
+    @elseif($selected_myclass_id)
+    <div class="py-10 text-center text-gray-400 text-sm">
+        No data found. Check that students are enrolled and exam settings are configured.
+    </div>
     @else
-        <div class="bg-white p-6 rounded-lg shadow text-center">
-            <p class="text-gray-500">Please select Session, School, Class, and Semester to view the marks register.</p>
-        </div>
+    <div class="py-10 text-center text-gray-400 text-sm">
+        Select a class above to view the marks register.
+    </div>
     @endif
+
 </div>

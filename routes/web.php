@@ -12,7 +12,9 @@ use App\Http\Livewire\Ex30MarksRegisterComp;
 use App\Http\Livewire\Bs11StudentcrComp;
 use App\Http\Livewire\Ex30MarksEntryComp3;
 use App\Http\Livewire\Ex30MarksRegisterComp2;
+use App\Http\Livewire\Ex31MarksResultComp;
 use App\Http\Livewire\LcMainLayout;
+use Whoops\Run;
 
 Route::get('/home', LcMainLayout::class)->name('home');
 
@@ -29,9 +31,15 @@ Route::get('/marks-entry2', Ex30MarksEntryComp2::class)->name('marks-entry2');
 Route::get('/marks-entry3', Ex30MarksEntryComp3::class)->name('marks-entry3');
 
 
-Route::get('/', function () {
+
+Route::get('/', function(){
     return view('welcome');
 });
+
+Route::get('/marks-register2', Ex30MarksRegisterComp2::class)->name('marks-register2');
+
+// Individual student result sheet
+Route::get('/result/{sessionId}/{myclassId}/{studentcrId}', Ex31MarksResultComp::class)->name('result');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
