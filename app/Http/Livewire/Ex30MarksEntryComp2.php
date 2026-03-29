@@ -62,10 +62,12 @@ class Ex30MarksEntryComp2 extends Component
 
     public function render()
     {
-        // Only reload options and students if selections have changed
-        // Don't reload students if marks_entry_enabled is false and we already have studentList
-        if (!$this->marks_entry_enabled || empty($this->studentList)) {
-            $this->loadOptions();
+        // Always load options
+        $this->loadOptions();
+        
+        // Load students if we have minimum required selections (session, myclass, semester)
+        // This ensures existing marks are loaded even before enabling marks entry mode
+        if ($this->selected_session_id && $this->selected_myclass_id && $this->selected_semester_id) {
             $this->loadStudents();
         }
 
@@ -284,9 +286,10 @@ class Ex30MarksEntryComp2 extends Component
             });
         }
 
-        // Get existing marks for this subject/session/school/exam_detail (if subject selected)
+        // Get existing marks for this subject/session/school/exam_detail
+        // ALWAYS load existing marks if we have exam_detail and subject selected
         $existingMarksFromDb = collect([]);
-        if ($this->selected_subject_id && $this->selected_exam_detail_id) {
+        if ($this->selected_exam_detail_id && $this->selected_subject_id) {
             $existingMarksFromDb = Ex30MarksEntry::where('session_id', $this->selected_session_id)
                 ->where('school_id', $this->selected_school_id)
                 ->where('subject_id', $this->selected_subject_id)

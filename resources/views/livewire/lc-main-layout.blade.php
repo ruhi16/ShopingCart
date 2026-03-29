@@ -84,6 +84,10 @@
                                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                                 Go to Marks Register 2
                             </a>
+                            <a href="{{ route('marks-entry3') }}" target="_blank" 
+                               class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                Go to Marks Entry 3
+                            </a>
                         </div>
                     @elseif($activeMenu === 'basic')
                         <p>Basic management section. Select a submenu option.</p>

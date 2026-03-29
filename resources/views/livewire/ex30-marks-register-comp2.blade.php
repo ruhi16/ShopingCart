@@ -71,9 +71,9 @@
                         {{-- Student Info Columns (5 columns) --}}
                         <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Roll No</th>
                         <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Student Name</th>
-                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Class</th>
-                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Section</th>
-                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Semester</th>
+                        {{-- <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Class</th> --}}
+                        {{-- <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Section</th> --}}
+                        <th rowspan="2" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase border-r">Subjects</th>
                         
                         {{-- Exam Detail Headers --}}
                         @foreach($examDetails as $index => $examDetail)
@@ -120,19 +120,26 @@
                                     @if($isFirstRow)
                                         {{-- Student Info (only in first subject row) --}}
                                         <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm font-bold text-gray-900 border-r align-top">{{ $student->roll_no }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm font-bold text-gray-900 border-r align-top">{{ $student->studentdb->student_name ?? 'N/A' }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentMyclass->name ?? 'N/A' }}</td>
+                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm font-bold text-gray-900 border-r align-top">
+                                            {{ $student->studentdb->student_name ?? 'N/A' }}<br/>
+                                            {{ $student->currentMyclass->name ?? 'N/A' }}
+                                            {{ $student->currentSection->name ?? 'N/A' }} <br/>
+                                            {{ $student->currentSemester->name ?? 'N/A' }} Semester
+
+                                        </td>
+
+                                        {{-- <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentMyclass->name ?? 'N/A' }}</td>
                                         <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentSection->name ?? 'N/A' }}</td>
-                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentSemester->name ?? 'N/A' }}</td>
+                                        <td rowspan="{{ $rowspan }}" class="px-3 py-2 text-sm text-gray-900 border-r align-top">{{ $student->currentSemester->name ?? 'N/A' }}</td> --}}
                                     @endif
                                     
                                     {{-- Subject Name --}}
                                     <td class="px-3 py-2 text-sm font-semibold text-gray-800 border-r {{ !$isFirstRow ? 'bg-gray-50' : '' }}">
                                         <div class="flex items-center">
                                             <span class="font-bold">{{ $subjectInfo->subject->short_name ?? $subjectInfo->subject->name ?? 'Subject ' . $subjectId }}</span>
-                                            @if($isFirstRow)
+                                            {{-- @if($isFirstRow)
                                                 <span class="ml-2 text-xs text-gray-500">({{ $subjectCount }} subjects total)</span>
-                                            @endif
+                                            @endif --}}
                                         </div>
                                     </td>
                                     
@@ -142,6 +149,7 @@
                                             $markData = $subjectMarks['exam_marks'][$examDetail->id] ?? null;
                                         @endphp
                                         <td class="px-2 py-2 text-center text-sm border border-gray-300 {{ $markData && $markData['is_absent'] ? 'bg-red-50' : '' }} {{ $markData && !$markData['is_absent'] ? 'bg-green-50' : '' }}">
+                                            
                                             @if($markData && isset($markData['exam_setting_id']) && $markData['exam_setting_id'])
                                                 @if($markData['is_absent'])
                                                     <span class="text-red-600 font-bold text-xs">ABSENT</span>

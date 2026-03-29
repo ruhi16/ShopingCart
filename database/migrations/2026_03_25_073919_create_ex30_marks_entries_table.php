@@ -28,6 +28,8 @@ class CreateEx30MarksEntriesTable extends Migration
             $table->float('marks_percentage', 10, 2)->nullable();
             $table->string('marks_grade', 10)->nullable();
 
+            $table->boolean('is_absent')->nullable();
+
             $table->integer('session_id')->unsigned();
             $table->integer('school_id')->unsigned();
 
