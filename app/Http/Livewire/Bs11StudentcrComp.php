@@ -31,6 +31,12 @@ class Bs11StudentcrComp extends Component
     public $custom_roll_no = '';
     public $selected_section_id = '';
 
+    // Edit Roll Modal
+    public $isEditRollModalOpen = false;
+    public $editing_studentcr_id = null;
+    public $edit_roll_no = '';
+    public $editingStudentcr = null;
+
     // Dropdown options
     public $sessionOptions = [];
     public $schoolOptions = [];
@@ -204,5 +210,61 @@ class Bs11StudentcrComp extends Component
     public function updatingSelectedSchoolId()
     {
         $this->resetPage();
+    }
+
+    public function openEditRollModal($studentcrId)
+    {
+        $this->editing_studentcr_id = $studentcrId;
+        $this->editingStudentcr = Bs11Studentcr::with('studentdb')->find($studentcrId);
+        
+        if ($this->editingStudentcr) {
+            $this->edit_roll_no = $this->editingStudentcr->roll_no;
+            $this->isEditRollModalOpen = true;
+        }
+    }
+
+    public function closeEditRollModal()
+    {
+        $this->isEditRollModalOpen = false;
+        $this->editing_studentcr_id = null;
+        $this->edit_roll_no = '';
+        $this->editingStudentcr = null;
+    }
+
+    public function updateRoll()
+    {
+        $this->validate([
+            'edit_roll_no' => 'required|integer|min:1',
+        ]);
+
+        $studentcr = Bs11Studentcr::find($this->editing_studentcr_id);
+        
+        if (!$studentcr) {
+            session()->flash('error', 'Student CR record not found.');
+            $this->closeEditRollModal();
+            return;
+        }
+
+        // Check if the new roll number already exists for a different student in the same session
+        $exists = Bs11Studentcr::where('session_id', $studentcr->session_id)
+            ->where('roll_no', $this->edit_roll_no)
+            ->where('id', '!=', $this->editing_studentcr_id)
+            ->exists();
+        
+        if ($exists) {
+            session()->flash('error', 'Roll number already exists for another student. Please choose a different number.');
+            return;
+        }
+
+        // Update the roll number
+        $oldRollNo = $studentcr->roll_no;
+        $studentcr->roll_no = $this->edit_roll_no;
+        $studentcr->save();
+
+        session()->flash('message', "Roll number updated from {$oldRollNo} to {$this->edit_roll_no} successfully.");
+        $this->closeEditRollModal();
+        
+        // Reset pagination to refresh the data
+        $this->resetPage('assigned_page');
     }
 }

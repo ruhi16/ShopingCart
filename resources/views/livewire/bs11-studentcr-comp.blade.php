@@ -183,6 +183,10 @@
                                 @endif
                             </td>
                             <td class="px-3 py-2 text-center whitespace-nowrap">
+                                <button wire:click="openEditRollModal({{ $studentcr->id }})"
+                                    class="text-blue-600 hover:text-blue-900 text-sm font-medium mr-3">
+                                    Edit Roll
+                                </button>
                                 <button wire:click="removeFromCr({{ $studentcr->id }})"
                                     wire:confirm="Are you sure you want to remove this student from CR records?"
                                     class="text-red-600 hover:text-red-900 text-sm font-medium">
@@ -287,6 +291,72 @@
                                 <button type="submit"
                                     class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
                                     Assign Roll
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Edit Roll Modal --}}
+    @if($isEditRollModalOpen)
+        <div class="fixed inset-0 z-50 overflow-y-auto" x-data="{ show: true }" x-show="show"
+            x-on:keydown.escape.window="show = false; @this.closeEditRollModal()">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                    x-on:click="@this.closeEditRollModal()">
+                </div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                <div x-show="show" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                Edit Roll Number
+                            </h3>
+                            @if($editingStudentcr)
+                                <p class="text-sm text-gray-600 mt-1">
+                                    Student: <span class="font-medium">{{ $editingStudentcr->studentdb->student_name ?? 'N/A' }}</span>
+                                </p>
+                                <p class="text-sm text-gray-600">
+                                    Current Roll: <span class="font-bold text-blue-600">{{ $editingStudentcr->roll_no }}</span>
+                                </p>
+                            @endif
+                        </div>
+
+                        {{-- Form --}}
+                        <form wire:submit.prevent="updateRoll()">
+                            <div class="space-y-4">
+                                {{-- New Roll Number Input --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">New Roll Number</label>
+                                    <input type="number" wire:model="edit_roll_no" placeholder="Enter new roll number"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                    @error('edit_roll_no')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                    <p class="text-xs text-yellow-800">
+                                        <strong>Note:</strong> If the roll number already exists for another student in this session, you will see an error message.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex justify-end space-x-3">
+                                <button type="button" wire:click="closeEditRollModal()"
+                                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                                    Update Roll
                                 </button>
                             </div>
                         </form>

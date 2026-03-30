@@ -92,10 +92,13 @@ class Ex30MarksEntryComp3 extends Component
         if ($this->myclass_id && $this->subject_id && $this->exam_detail_id && $this->semester_id) {
             // Find students who are enrolled in this class and have this subject in studentdb_subjects
             $this->students = Bs11Studentcr::with(['studentdb'])
-                ->where('current_myclass_id', $this->myclass_id)
+                ->join('bs10_studentdbs', 'bs11_studentcrs.studentdb_id', '=', 'bs10_studentdbs.id')
+                ->where('bs11_studentcrs.current_myclass_id', $this->myclass_id)
                 ->whereHas('studentdb.studentSubjects', function ($query) {
                     $query->where('subject_id', $this->subject_id);
                 })
+                ->orderBy('bs10_studentdbs.board_reg_no')
+                ->select('bs11_studentcrs.*')
                 ->get();
 
             // Load existing marks
