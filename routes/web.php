@@ -32,9 +32,15 @@ Route::get('/marks-entry3', Ex30MarksEntryComp3::class)->name('marks-entry3');
 
 
 
-Route::get('/', function(){
-    return view('welcome');
-});
+Route::get('/', function () {
+    // $notices = Notice::all();         //orderBy('dop', 'desc')->get();
+    // $databaseName = Config::get('database.connections.'.Config::get('database.default').'.database');
+
+    return view('welcome',[
+        // 'notices' => $notices,
+        // 'dbname' => $databaseName
+    ]);
+})->name('welcome');
 
 Route::get('/marks-register2', Ex30MarksRegisterComp2::class)->name('marks-register2');
 

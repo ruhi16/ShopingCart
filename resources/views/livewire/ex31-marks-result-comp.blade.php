@@ -62,18 +62,19 @@
                                     @php
                                         $examMark = $subjectData['exam_marks'][$examDetail->id] ?? null;
                                     @endphp
-                                    <td class="px-3 py-3 text-center text-sm border border-gray-300 {{ $examMark && $examMark['is_absent'] ? 'bg-red-50' : '' }}">
-                                        @if($examMark)
+                                    <td class="px-2 py-2 text-center text-sm border border-gray-300 {{ $examMark && $examMark['is_absent'] ? 'bg-red-50' : '' }} {{ $examMark && !$examMark['is_absent'] && $examMark['exam_setting_id'] ? 'bg-green-50' : '' }}">
+                                        @if($examMark && $examMark['exam_setting_id'])
                                             @if($examMark['is_absent'])
                                                 <span class="text-red-600 font-bold text-xs">ABSENT</span>
                                             @elseif($examMark['marks_obtained'] !== null)
-                                                <div class="font-bold text-blue-800">{{ number_format($examMark['marks_obtained'], 2) }}</div>
-                                                <div class="text-xs text-gray-500">/{{ $examMark['full_mark'] }}</div>
+                                                <div class="text-xs font-bold text-blue-800">{{ number_format($examMark['marks_obtained'], 2) }}</div>
+                                                <div class="text-xs text-gray-600">/{{ $examMark['full_mark'] }}</div>
+                                                <div class="text-xs font-semibold {{ $examMark['grade'] == 'F' ? 'text-red-600' : 'text-green-600' }}">{{ $examMark['grade'] }}</div>
                                             @else
-                                                <span class="text-gray-400">-</span>
+                                                <span class="text-gray-400 text-xs">-</span>
                                             @endif
                                         @else
-                                            <span class="text-gray-300">N/A</span>
+                                            <span class="text-gray-300 text-xs">N/A</span>
                                         @endif
                                     </td>
                                 @endforeach

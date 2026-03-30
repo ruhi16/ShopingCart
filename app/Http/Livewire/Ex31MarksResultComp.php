@@ -9,6 +9,9 @@ use App\Models\Ex24Detail;
 use App\Models\Ex30MarksEntry;
 use App\Models\Session;
 use App\Models\Bs04Myclass;
+use App\Models\Bs08CategorySubject;
+use App\Models\Bs07Subject;
+use App\Models\Bs09MyclassSemester;
 use Livewire\Component;
 
 class Ex31MarksResultComp extends Component
@@ -16,7 +19,7 @@ class Ex31MarksResultComp extends Component
     public $session_id;
     public $myclass_id;
     public $studentcr_id;
-    
+
     public $student = null;
     public $subjects = [];
     public $examDetails = [];
@@ -33,7 +36,7 @@ class Ex31MarksResultComp extends Component
         if ($sessionId) $this->session_id = $sessionId;
         if ($myclassId) $this->myclass_id = $myclassId;
         if ($studentcrId) $this->studentcr_id = $studentcrId;
-        
+
         $this->loadResultData();
     }
 
@@ -57,28 +60,42 @@ class Ex31MarksResultComp extends Component
         ])->findOrFail($this->studentcr_id);
 
         // Verify student belongs to the selected class and session
-        if ($this->student->session_id != $this->session_id || 
+        if ($this->student->session_id != $this->session_id ||
             $this->student->current_myclass_id != $this->myclass_id) {
             abort(404, 'Student not found in this class/session');
         }
 
-        // Get subjects opted by this student
-        $studentSubjects = Bs12StudentdbSubject::with(['subject'])
-            ->where('studentdb_id', $this->student->studentdb_id)
+        // 1. Get student's opted subjects to find their category
+        $studentOptedSubjects = Bs12StudentdbSubject::where('studentdb_id', $this->student->studentdb_id)
+            ->where('is_active', 1)
+            ->pluck('subject_id');
+
+        // Find the category_id from the student's subjects
+        $categoryId = Bs07Subject::whereIn('id', $studentOptedSubjects)
+            ->whereNotNull('category_id')
+            ->value('category_id');
+
+        // 2. Find all subjects assigned to this category using bs08_category_subjects
+        $assignedSubjectIds = [];
+        if ($categoryId) {
+            $assignedSubjectIds = Bs08CategorySubject::where('category_id', $categoryId)
+                ->where('is_active', 1)
+                ->pluck('subject_id')
+                ->toArray();
+        }
+
+        // Combine opted subjects and assigned subjects (unique)
+        $allSubjectIds = array_unique(array_merge($studentOptedSubjects->toArray(), $assignedSubjectIds));
+
+        $this->subjects = Bs07Subject::whereIn('id', $allSubjectIds)
             ->where('is_active', 1)
             ->get();
 
-        $this->subjects = $studentSubjects->pluck('subject')->toArray();
-        $subjectIds = $studentSubjects->pluck('subject_id')->toArray();
-
-        // Get all exam details for this class (all semesters)
-        $semesterIds = Bs11Studentcr::where('session_id', $this->session_id)
+        // 3. Get all semesters allowed for this class from Bs09MyclassSemester
+        $semesterIds = Bs09MyclassSemester::where('myclass_id', $this->myclass_id)
+            ->where('session_id', $this->session_id)
             ->where('school_id', $this->student->school_id)
-            ->where('current_myclass_id', $this->myclass_id)
-            ->where('is_active', 1)
-            ->whereNotNull('current_semester_id')
-            ->distinct()
-            ->pluck('current_semester_id');
+            ->pluck('semester_id');
 
         $examSettings = Ex25Settings::with(['examDetail'])
             ->where('myclass_id', $this->myclass_id)
@@ -97,7 +114,7 @@ class Ex31MarksResultComp extends Component
             ->orderBy('id', 'ASC')
             ->get();
 
-        // Get marks for this student
+        // 4. Get marks for this student
         $allMarks = Ex30MarksEntry::where('studentcr_id', $this->studentcr_id)
             ->where('session_id', $this->session_id)
             ->where('school_id', $this->student->school_id)
@@ -108,10 +125,10 @@ class Ex31MarksResultComp extends Component
         $this->totalMarks = 0;
         $this->totalFullMarks = 0;
 
-        foreach ($studentSubjects as $studentSubject) {
-            $subjectId = $studentSubject->subject_id;
+        foreach ($this->subjects as $subject) {
+            $subjectId = $subject->id;
             $this->marksData[$subjectId] = [
-                'subject' => $studentSubject->subject,
+                'subject' => $subject,
                 'exam_marks' => [],
                 'subject_total' => 0,
                 'subject_full' => 0,
@@ -121,7 +138,7 @@ class Ex31MarksResultComp extends Component
 
             foreach ($this->examDetails as $examDetail) {
                 $examDetailId = $examDetail->id;
-                
+
                 // Find exam setting for this subject and exam detail
                 $settingsForDetail = $examSettingsByDetail->get($examDetailId, collect());
                 $setting = $settingsForDetail->firstWhere('subject_id', $subjectId);
@@ -154,6 +171,7 @@ class Ex31MarksResultComp extends Component
 
                     $this->marksData[$subjectId]['exam_marks'][$examDetailId] = [
                         'exam_detail' => $examDetail,
+                        'exam_setting_id' => $setting ? $setting->id : null,
                         'marks_obtained' => $isAbsent ? null : $marksObtained,
                         'full_mark' => $fullMark,
                         'pass_mark' => $passMark,
@@ -167,6 +185,7 @@ class Ex31MarksResultComp extends Component
 
                     $this->marksData[$subjectId]['exam_marks'][$examDetailId] = [
                         'exam_detail' => $examDetail,
+                        'exam_setting_id' => $setting ? $setting->id : null,
                         'marks_obtained' => null,
                         'full_mark' => $fullMark,
                         'pass_mark' => $passMark,
@@ -180,7 +199,7 @@ class Ex31MarksResultComp extends Component
             // Calculate subject total and grade
             if ($this->marksData[$subjectId]['subject_full'] > 0) {
                 $this->marksData[$subjectId]['subject_percentage'] = round(
-                    ($this->marksData[$subjectId]['subject_total'] / $this->marksData[$subjectId]['subject_full']) * 100, 
+                    ($this->marksData[$subjectId]['subject_total'] / $this->marksData[$subjectId]['subject_full']) * 100,
                     2
                 );
                 $this->marksData[$subjectId]['subject_grade'] = $this->calculateGrade(
@@ -193,7 +212,7 @@ class Ex31MarksResultComp extends Component
         if ($this->totalFullMarks > 0) {
             $this->percentage = round(($this->totalMarks / $this->totalFullMarks) * 100, 2);
             $this->grade = $this->calculateGrade($this->percentage);
-            
+
             // Determine pass/fail status
             $hasFailed = false;
             foreach ($this->marksData as $subjectData) {
@@ -202,19 +221,19 @@ class Ex31MarksResultComp extends Component
                     break;
                 }
             }
-            
+
             $this->resultStatus = $hasFailed ? 'FAIL' : 'PASS';
         }
     }
 
     private function calculateGrade($percentage)
     {
-        if ($percentage >= 90) return 'A+';
-        if ($percentage >= 80) return 'A';
-        if ($percentage >= 70) return 'B+';
-        if ($percentage >= 60) return 'B';
-        if ($percentage >= 50) return 'C';
-        if ($percentage >= 40) return 'D';
+        if ($percentage >= 80) return 'A+';
+        if ($percentage >= 70) return 'A';
+        if ($percentage >= 60) return 'A-';
+        if ($percentage >= 50) return 'B';
+        if ($percentage >= 40) return 'C';
+        if ($percentage >= 33) return 'D';
         return 'F';
     }
 }

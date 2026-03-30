@@ -25,6 +25,8 @@ class CreateEx24DetailsTable extends Migration
 
             $table->integer('session_id')->unsigned();
             $table->integer('school_id')->unsigned();
+            $table->integer('myclass_id')->unsigned();
+            $table->integer('semester_id')->unsigned();
 
             $table->boolean('is_active')->default(true);
             $table->string('remarks')->nullable();
