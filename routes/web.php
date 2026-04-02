@@ -13,6 +13,8 @@ use App\Http\Livewire\Bs11StudentcrComp;
 use App\Http\Livewire\Ex30MarksEntryComp3;
 use App\Http\Livewire\Ex30MarksRegisterComp2;
 use App\Http\Livewire\Ex31MarksResultComp;
+use App\Http\Livewire\Ex30MarksEntryCombSemestersComp;
+use App\Http\Livewire\Ex30MarksEntryNewComp;
 use App\Http\Livewire\LcMainLayout;
 use Whoops\Run;
 
@@ -30,6 +32,8 @@ Route::get('/studentcr', Bs11StudentcrComp::class)->name('studentcr');
 Route::get('/marks-entry2', Ex30MarksEntryComp2::class)->name('marks-entry2');
 Route::get('/marks-entry3', Ex30MarksEntryComp3::class)->name('marks-entry3');
 
+Route::get('/marks-entry-comb-semesters', Ex30MarksEntryCombSemestersComp::class)->name('marks-entry-comb-semesters');
+Route::get('/marks-entry-new', Ex30MarksEntryNewComp::class)->name('marks-entry-new');
 
 
 Route::get('/', function () {
