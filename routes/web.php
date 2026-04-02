@@ -30,6 +30,8 @@ Route::get('/studentcr', Bs11StudentcrComp::class)->name('studentcr');
 Route::get('/marks-entry2', Ex30MarksEntryComp2::class)->name('marks-entry2');
 Route::get('/marks-entry3', Ex30MarksEntryComp3::class)->name('marks-entry3');
 
+Route::get('/marks-register2-pdf/{myclassId}', [Ex30MarksRegisterComp2::class, 'generatePdf'])->name('marks-register2-pdf');
+
 
 
 Route::get('/', function () {
@@ -41,8 +43,6 @@ Route::get('/', function () {
         // 'dbname' => $databaseName
     ]);
 })->name('welcome');
-
-Route::get('/marks-register2', Ex30MarksRegisterComp2::class)->name('marks-register2');
 
 // Individual student result sheet
 Route::get('/result/{sessionId}/{myclassId}/{studentcrId}', Ex31MarksResultComp::class)->name('result');

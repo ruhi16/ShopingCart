@@ -230,6 +230,9 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
+
+        'PDF' => Mccarlosen\LaravelMpdf\Facades\LaravelMpdf::class,
+
     ],
 
 ];
