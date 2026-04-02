@@ -21,6 +21,11 @@ class Bs05Semester extends Model
         return $this->hasMany(Bs10Studentdb::class, 'admission_semester_id');
     }
 
+    public function semesterClasses()
+    {
+        return $this->hasMany(Bs09MyclassSemester::class, 'semester_id');
+    }
+
 
 
 }

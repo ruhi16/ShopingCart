@@ -21,7 +21,16 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'school_id',
     ];
+
+    /**
+     * Get the school associated with the user.
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class, 'school_id');
+    }
 
     /**
      * The attributes that should be hidden for serialization.

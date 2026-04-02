@@ -53,6 +53,12 @@ class Bs10Studentdb extends Model
         return $this->hasMany(Bs12StudentdbSubject::class, 'studentdb_id');
     }
 
+    public function subjects()
+    {
+        return $this->belongsToMany(Bs07Subject::class, 'bs12_studentdb_subjects', 'studentdb_id', 'subject_id')
+            ->withPivot('is_active');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', 1);
