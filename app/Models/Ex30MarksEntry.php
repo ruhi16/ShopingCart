@@ -10,6 +10,10 @@ class Ex30MarksEntry extends Model
     use HasFactory;
     protected $table = 'ex30_marks_entries';
     protected $guarded = ['id'];
+    
+    // Ensure increments is enabled for auto-incrementing ID
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     public function studentcr()
     {

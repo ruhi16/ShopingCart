@@ -6,6 +6,7 @@ use App\Models\Bs04Myclass;
 use App\Models\Bs07Subject;
 use App\Models\Bs11Studentcr;
 use App\Models\Bs05Semester;
+use App\Models\Bs09MyclassSemester;
 use App\Models\Ex24Detail;
 use App\Models\Ex25Settings;
 use App\Models\Ex30MarksEntry;
@@ -59,26 +60,46 @@ class Ex30MarksEntryCombSemestersComp extends Component
     public function loadClasses()
     {
         if ($this->sessionId && $this->schoolId) {
-            $this->myclasses = Bs04Myclass::where('session_id', $this->sessionId)
+            $classes = Bs04Myclass::where('session_id', $this->sessionId)
                 ->where('school_id', $this->schoolId)
                 ->where('is_active', 1)
+                ->distinct()
                 ->orderBy('name')
                 ->get();
+            
+            // Ensure uniqueness
+            $this->myclasses = $classes->unique('id')->values();
+            
+            \Log::info('Classes loaded:', [
+                'raw_count' => $classes->count(),
+                'unique_count' => $this->myclasses->count(),
+                'ids' => $this->myclasses->pluck('id')->toArray()
+            ]);
         } else {
-            $this->myclasses = [];
+            $this->myclasses = collect();
         }
     }
 
     public function loadSubjects()
     {
         if ($this->sessionId && $this->schoolId) {
-            $this->subjects = Bs07Subject::where('session_id', $this->sessionId)
+            $subjects = Bs07Subject::where('session_id', $this->sessionId)
                 ->where('school_id', $this->schoolId)
                 ->where('is_active', 1)
+                ->distinct()
                 ->orderBy('name')
                 ->get();
+            
+            // Ensure uniqueness
+            $this->subjects = $subjects->unique('id')->values();
+            
+            \Log::info('Subjects loaded:', [
+                'raw_count' => $subjects->count(),
+                'unique_count' => $this->subjects->count(),
+                'ids' => $this->subjects->pluck('id')->toArray()
+            ]);
         } else {
-            $this->subjects = [];
+            $this->subjects = collect();
         }
     }
 
@@ -86,15 +107,19 @@ class Ex30MarksEntryCombSemestersComp extends Component
     {
         // Only reset subject selection and marks data, keep session and school
         $this->selectedSubjectId = null;
+        // Reload subjects with deduplication
         $this->subjects = Bs07Subject::where('session_id', $this->sessionId)
             ->where('school_id', $this->schoolId)
             ->where('is_active', 1)
+            ->distinct()
             ->orderBy('name')
-            ->get();
-        $this->semesters = [];
+            ->get()
+            ->unique('id')
+            ->values();
+        $this->semesters = collect();
         $this->examDetailsBySemester = [];
         $this->examSettingsBySemester = [];
-        $this->students = [];
+        $this->students = collect();
         $this->marksData = [];
     }
 
@@ -111,30 +136,53 @@ class Ex30MarksEntryCombSemestersComp extends Component
     public function loadStudents()
     {
         if (!$this->selectedClassId || !$this->selectedSubjectId) {
+            $this->students = collect();
             return;
         }
 
         // Get students for selected class who are enrolled in the selected subject
-        $this->students = Bs11Studentcr::with(['studentdb', 'studentdb.subjects'])
+        $students = Bs11Studentcr::with(['studentdb'])
             ->where('current_myclass_id', $this->selectedClassId)
             ->where('session_id', $this->sessionId)
             ->where('is_active', 1)
-            ->get()
-            ->filter(function($student) {
-                // Filter students who are enrolled in the selected subject
-                if ($student->studentdb && $student->studentdb->subjects) {
-                    return $student->studentdb->subjects->contains('id', $this->selectedSubjectId);
-                }
+            ->orderBy('roll_no')
+            ->get();
+        
+        \Log::info('Students before filtering:', [
+            'count' => $students->count(),
+            'student_ids' => $students->pluck('id')->toArray()
+        ]);
+        
+        // Filter students who are enrolled in the selected subject via bs12_studentdb_subjects
+        $filteredStudents = $students->filter(function($student) {
+            if (!$student->studentdb) {
                 return false;
-            })
+            }
+            
+            // Check if student has the selected subject in bs12_studentdb_subjects
+            $hasSubject = \DB::table('bs12_studentdb_subjects')
+                ->where('studentdb_id', $student->studentdb_id)
+                ->where('subject_id', $this->selectedSubjectId)
+                ->where('is_active', 1)
+                ->exists();
+            
+            return $hasSubject;
+        });
+        
+        // Map to add board_reg_no and ensure uniqueness
+        $this->students = $filteredStudents
             ->map(function($student) {
-                // Join with studentdb to get board_reg_no
                 $student->board_reg_no = $student->studentdb->board_reg_no ?? '';
                 return $student;
             })
             ->sortBy('board_reg_no')
-            ->values()
-            ->values();
+            ->values(); // Single call to values()
+        
+        \Log::info('Students after filtering:', [
+            'count' => $this->students->count(),
+            'student_ids' => $this->students->pluck('id')->toArray(),
+            'selected_subject_id' => $this->selectedSubjectId
+        ]);
 
         // Initialize marksData for these students
         $this->initializeMarksData();
@@ -182,31 +230,57 @@ class Ex30MarksEntryCombSemestersComp extends Component
 
         // Get all semesters for the selected class using the myclass_semesters pivot table
         $selectedClassId = $this->selectedClassId;
-        $this->semesters = Bs05Semester::whereHas('admissionSemester', function($query) use ($selectedClassId) {
-            $query->where('current_myclass_id', $selectedClassId);
-        })
-        ->orWhereHas('semesterClasses', function($query) use ($selectedClassId) {
-            $query->where('bs09_myclass_semesters.myclass_id', $selectedClassId);
-        })
-        ->distinct()
-        ->get();
+        
+        // Use semesterClasses relationship (Bs09MyclassSemester) which links classes to semesters
+        // Get unique semester IDs first to avoid duplicates
+        $semesterIds = Bs09MyclassSemester::where('myclass_id', $selectedClassId)
+            ->pluck('semester_id')
+            ->unique()
+            ->toArray();
+        
+        // Then fetch the actual semester records
+        if (!empty($semesterIds)) {
+            $this->semesters = Bs05Semester::whereIn('id', $semesterIds)
+                ->orderBy('id')
+                ->get();
+        } else {
+            $this->semesters = collect();
+        }
 
         // If no semesters found through relationships, get all active semesters
         if ($this->semesters->isEmpty()) {
             $this->semesters = Bs05Semester::active()->get();
         }
+        
+        // Log for debugging
+        \Log::info('Semesters loaded:', [
+            'count' => $this->semesters->count(),
+            'semester_ids' => $this->semesters->pluck('id')->toArray()
+        ]);
 
         // For each semester, get exam details and settings
         foreach ($this->semesters as $semester) {
             $semesterId = $semester->id;
 
-            // Get exam details for this class, semester, and session
+            // Get exam details for this class, semester, and session - ensure unique
             $examDetails = Ex24Detail::where('myclass_id', $this->selectedClassId)
                 ->where('semester_id', $semesterId)
                 ->where('session_id', $this->sessionId)
+                ->where('is_active', 1)
+                ->distinct()
+                ->orderBy('id')
                 ->get();
+            
+            // Ensure no duplicate exam details by ID
+            $examDetails = $examDetails->unique('id')->values();
 
             $this->examDetailsBySemester[$semesterId] = $examDetails;
+            
+            \Log::info("Exam details for semester {$semesterId}:", [
+                'count' => $examDetails->count(),
+                'detail_ids' => $examDetails->pluck('id')->toArray(),
+                'unique_count' => $examDetails->unique('id')->count()
+            ]);
 
             // Get exam settings for each exam detail
             $settings = [];
@@ -225,6 +299,15 @@ class Ex30MarksEntryCombSemestersComp extends Component
 
             $this->examSettingsBySemester[$semesterId] = $settings;
         }
+        
+        // Final verification - log all data structures
+        \Log::info('Final data structures:', [
+            'semesters_count' => $this->semesters->count(),
+            'semesters' => $this->semesters->pluck('id')->toArray(),
+            'exam_details_by_semester' => collect($this->examDetailsBySemester)->map(function($details) {
+                return $details->pluck('id')->toArray();
+            })->toArray()
+        ]);
     }
 
     public function saveMarks()
@@ -260,27 +343,28 @@ class Ex30MarksEntryCombSemestersComp extends Component
                             ]);
                             $updatedCount++;
                         } else {
-                            // Create new record
-                            Ex30MarksEntry::create([
-                                'studentcr_id' => $studentcrId,
-                                'myclass_id' => $this->selectedClassId,
-                                'section_id' => $this->getCurrentSection($studentcrId),
-                                'semester_id' => $semesterId,
-                                'subject_id' => $this->selectedSubjectId,
-                                'exam_detail_id' => $examDetailId,
-                                'exam_setting_id' => $markData['exam_setting_id'] ?? null,
-                                'marks_obtained' => $markData['marks_obtained'] ?? null,
-                                'marks_percentage' => $this->calculatePercentage(
-                                    $markData['marks_obtained'] ?? null,
-                                    $markData['full_mark'] ?? null
-                                ),
-                                'marks_grade' => $markData['grade'] ?? null,
-                                'is_absent' => $markData['is_absent'] ?? false,
-                                'session_id' => $this->sessionId,
-                                'school_id' => $this->schoolId,
-                                'is_active' => true,
-                                'remarks' => $markData['remarks'] ?? null,
-                            ]);
+                            // Create new record - don't include 'id' as it's auto-incrementing
+                            $markEntry = new Ex30MarksEntry();
+                            $markEntry->studentcr_id = $studentcrId;
+                            $markEntry->myclass_id = $this->selectedClassId;
+                            $markEntry->section_id = $this->getCurrentSection($studentcrId);
+                            $markEntry->semester_id = $semesterId;
+                            $markEntry->subject_id = $this->selectedSubjectId;
+                            $markEntry->exam_detail_id = $examDetailId;
+                            $markEntry->exam_setting_id = $markData['exam_setting_id'] ?? null;
+                            $markEntry->marks_obtained = $markData['marks_obtained'] ?? null;
+                            $markEntry->marks_percentage = $this->calculatePercentage(
+                                $markData['marks_obtained'] ?? null,
+                                $markData['full_mark'] ?? null
+                            );
+                            $markEntry->marks_grade = $markData['grade'] ?? null;
+                            $markEntry->is_absent = $markData['is_absent'] ?? false;
+                            $markEntry->session_id = $this->sessionId;
+                            $markEntry->school_id = $this->schoolId;
+                            $markEntry->is_active = true;
+                            $markEntry->remarks = $markData['remarks'] ?? null;
+                            $markEntry->save();
+                            
                             $savedCount++;
                         }
                     }
@@ -329,27 +413,28 @@ class Ex30MarksEntryCombSemestersComp extends Component
                         ]);
                         $updatedCount++;
                     } else {
-                        // Create new record
-                        Ex30MarksEntry::create([
-                            'studentcr_id' => $studentId,
-                            'myclass_id' => $this->selectedClassId,
-                            'section_id' => $this->getCurrentSection($studentId),
-                            'semester_id' => $semesterId,
-                            'subject_id' => $this->selectedSubjectId,
-                            'exam_detail_id' => $examDetailId,
-                            'exam_setting_id' => $markData['exam_setting_id'] ?? null,
-                            'marks_obtained' => $markData['marks_obtained'] ?? null,
-                            'marks_percentage' => $this->calculatePercentage(
-                                $markData['marks_obtained'] ?? null,
-                                $markData['full_mark'] ?? null
-                            ),
-                            'marks_grade' => $markData['grade'] ?? null,
-                            'is_absent' => $markData['is_absent'] ?? false,
-                            'session_id' => $this->sessionId,
-                            'school_id' => $this->schoolId,
-                            'is_active' => true,
-                            'remarks' => $markData['remarks'] ?? null,
-                        ]);
+                        // Create new record - don't include 'id' as it's auto-incrementing
+                        $markEntry = new Ex30MarksEntry();
+                        $markEntry->studentcr_id = $studentId;
+                        $markEntry->myclass_id = $this->selectedClassId;
+                        $markEntry->section_id = $this->getCurrentSection($studentId);
+                        $markEntry->semester_id = $semesterId;
+                        $markEntry->subject_id = $this->selectedSubjectId;
+                        $markEntry->exam_detail_id = $examDetailId;
+                        $markEntry->exam_setting_id = $markData['exam_setting_id'] ?? null;
+                        $markEntry->marks_obtained = $markData['marks_obtained'] ?? null;
+                        $markEntry->marks_percentage = $this->calculatePercentage(
+                            $markData['marks_obtained'] ?? null,
+                            $markData['full_mark'] ?? null
+                        );
+                        $markEntry->marks_grade = $markData['grade'] ?? null;
+                        $markEntry->is_absent = $markData['is_absent'] ?? false;
+                        $markEntry->session_id = $this->sessionId;
+                        $markEntry->school_id = $this->schoolId;
+                        $markEntry->is_active = true;
+                        $markEntry->remarks = $markData['remarks'] ?? null;
+                        $markEntry->save();
+                        
                         $savedCount++;
                     }
                 }

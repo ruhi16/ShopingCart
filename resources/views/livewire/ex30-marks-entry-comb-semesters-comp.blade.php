@@ -93,7 +93,11 @@
                                 {{-- <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Student Name
                                 </th> --}}
-                                @foreach($semesters as $semester)
+                                @php
+                                    // Ensure semesters are unique by ID
+                                    $uniqueSemesters = $semesters->unique('id')->values();
+                                @endphp
+                                @foreach($uniqueSemesters as $semester)
                                     @php
                                         $headerSemesterId = is_object($semester) ? $semester->id : (is_array($semester) ? ($semester['id'] ?? null) : null);
                                         $headerSemesterName = is_object($semester) ? $semester->name : ($semester['name'] ?? 'Unknown');
@@ -110,10 +114,14 @@
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-16 bg-gray-50"></th>
                                 <th class="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50"></th>
                                 {{-- <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th> --}}
-                                @foreach($semesters as $semester)
+                                @foreach($uniqueSemesters as $semester)
                                     @php
                                         $headerSemesterId = is_object($semester) ? $semester->id : (is_array($semester) ? ($semester['id'] ?? null) : null);
                                         $headerExamDetails = $headerSemesterId ? ($examDetailsBySemester[$headerSemesterId] ?? []) : [];
+                                        // Ensure exam details are unique by ID
+                                        if (is_object($headerExamDetails) || is_array($headerExamDetails)) {
+                                            $headerExamDetails = collect($headerExamDetails)->unique('id')->values();
+                                        }
                                     @endphp
                                     @foreach($headerExamDetails as $detail)
                                         @php
@@ -156,7 +164,11 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($students as $studentKey => $student)
+                            @php
+                                // Ensure students are unique by ID
+                                $uniqueStudents = $students->unique('id')->values();
+                            @endphp
+                            @foreach($uniqueStudents as $studentKey => $student)
                                 @php
                                     $studentId = is_object($student) ? $student->id : (is_array($student) ? ($student['id'] ?? null) : null);
                                 @endphp
@@ -186,12 +198,19 @@
                                         </button>
                                     </td>
                                     
-                                    @foreach($semesters as $semesterKey => $semester)
+                                    @foreach($uniqueSemesters as $semesterKey => $semester)
                                         @php
                                             $semesterId = is_object($semester) ? $semester->id : (is_array($semester) ? ($semester['id'] ?? null) : null);
                                         @endphp
                                         @if($semesterId)
-                                            @foreach(($examDetailsBySemester[$semesterId] ?? []) as $detailKey => $detail)
+                                            @php
+                                                $semesterExamDetails = $examDetailsBySemester[$semesterId] ?? [];
+                                                // Ensure exam details are unique by ID
+                                                if (is_object($semesterExamDetails) || is_array($semesterExamDetails)) {
+                                                    $semesterExamDetails = collect($semesterExamDetails)->unique('id')->values();
+                                                }
+                                            @endphp
+                                            @foreach($semesterExamDetails as $detailKey => $detail)
                                                 @php
                                                     $detailId = is_object($detail) ? $detail->id : (is_array($detail) ? ($detail['id'] ?? null) : null);
                                                     $setting = ($examSettingsBySemester[$semesterId] ?? [])[$detailId] ?? null;
