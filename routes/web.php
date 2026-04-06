@@ -32,14 +32,10 @@ Route::get('/studentcr', Bs11StudentcrComp::class)->name('studentcr');
 Route::get('/marks-entry2', Ex30MarksEntryComp2::class)->name('marks-entry2');
 Route::get('/marks-entry3', Ex30MarksEntryComp3::class)->name('marks-entry3');
 
-<<<<<<< HEAD
 Route::get('/marks-register2-pdf/{myclassId}', [Ex30MarksRegisterComp2::class, 'generatePdf'])->name('marks-register2-pdf');
 
-=======
 Route::get('/marks-entry-comb-semesters', Ex30MarksEntryCombSemestersComp::class)->name('marks-entry-comb-semesters');
 Route::get('/marks-entry-new', Ex30MarksEntryNewComp::class)->name('marks-entry-new');
->>>>>>> be684676a4f582d65d0651d8522df652e62f4f07
-
 
 Route::get('/', function () {
     // $notices = Notice::all();         //orderBy('dop', 'desc')->get();

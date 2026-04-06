@@ -191,6 +191,8 @@ class Ex30MarksRegisterComp2 extends Component
                 $studentdbId = $student->studentdb_id;
                 $rollNo = e($student->roll_no);
                 $studentName = e($student->studentdb->student_name ?? '-');
+                $studentRegNo = e($student->studentdb->board_reg_no ?? '-');
+                
                 $studentClass = e(($student->currentMyclass->name ?? '') . ' ' . ($student->currentSection->name ?? ''));
 
                 $subjectsOpted = $studentSubjects->get($studentdbId, collect());
@@ -279,7 +281,7 @@ class Ex30MarksRegisterComp2 extends Component
 
                         if ($isFirst) {
                             $chunk .= '<td rowspan="' . $rowspan . '" style="text-align:center;color:#888;font-weight:500;vertical-align:middle">' . $rollNo . '</td>';
-                            $chunk .= '<td rowspan="' . $rowspan . '" style="vertical-align:middle"><div class="sn">' . $studentName . '</div><div class="sc">' . $studentClass . '</div></td>';
+                            $chunk .= '<td rowspan="' . $rowspan . '" style="vertical-align:middle"><div class="sn">' . $studentName . '</div><div class="sc">Class: ' . $studentClass . '</div><div class="sc">Reg No: ' . $studentRegNo . '</div></td>';
                         }
 
                         $chunk .= '<td><span class="snb ' . ($isAdditional ? 'saddl' : 'snorm') . '">' . e($subjName) . '</span>';

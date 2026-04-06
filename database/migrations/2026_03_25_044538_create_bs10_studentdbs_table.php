@@ -43,7 +43,7 @@ class CreateBs10StudentdbsTable extends Migration
 
             $table->integer('admission_myclass_id')->nullable();
             $table->integer('admission_section_id')->nullable();
-            $table->integer('admission_sememster_id')->nullable();
+            $table->integer('admission_semester_id')->nullable();
             $table->integer('admission_session_id')->nullable();
             
             $table->string('bank_account_number')->nullable();

@@ -337,6 +337,7 @@
                 </td>
                 <td rowspan="{{ $rowspan }}" style="vertical-align:middle">
                     <div class="student-name">{{ $student->studentdb->student_name ?? '—' }}</div>
+                    <div class="student-name">{{ $student->studentdb->student_reg_no ?? 'No Reg No' }}xx</div>
                     <div class="student-class">
                         {{ $student->currentMyclass->name ?? '' }}
                         {{ $student->currentSection->name ?? '' }}
