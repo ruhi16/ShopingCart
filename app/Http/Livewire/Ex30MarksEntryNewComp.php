@@ -16,6 +16,7 @@ use App\Models\Ex24Detail;
 use App\Models\Bs10Studentdb;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class Ex30MarksEntryNewComp extends Component
 {
@@ -203,6 +204,13 @@ class Ex30MarksEntryNewComp extends Component
                 return;
             }
 
+            // Find exam detail to get semester_id
+            $examDetail = $this->examDetails->firstWhere('id', $examDetailId);
+            if (!$examDetail) {
+                session()->flash('error', 'Exam detail not found.');
+                return;
+            }
+
             // Check if record already exists
             $existingRecord = Ex30MarksEntry::where('studentcr_id', $studentcrId)
                 ->where('myclass_id', $this->selectedClassId)
@@ -236,7 +244,7 @@ class Ex30MarksEntryNewComp extends Component
                     'subject_id' => $this->selectedSubjectId,
                     'exam_detail_id' => $examDetailId,
                     'exam_setting_id' => $setting->id,
-                    'semester_id' => $detail->semester_id,
+                    'semester_id' => $examDetail->semester_id,
                     'marks_obtained' => $isAbsent ? null : $marksObtained,
                     'marks_percentage' => $percentage,
                     'marks_grade' => $grade,

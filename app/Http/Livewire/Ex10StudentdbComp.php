@@ -113,13 +113,13 @@ class Ex10StudentdbComp extends Component
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('student_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('student_code', 'like', '%' . $this->search . '%')
+                    ->orWhere('board_reg_no', 'like', '%' . $this->search . '%')
                     ->orWhere('father_name', 'like', '%' . $this->search . '%')
                     ->orWhere('aadhaar_number', 'like', '%' . $this->search . '%');
             });
         }
 
-        $students = $query->orderBy('student_name', 'ASC')
+        $students = $query->orderBy('board_reg_no', 'ASC')
             ->paginate($this->perPage);
 
         return view('livewire.ex10-studentdb-comp', [
@@ -185,7 +185,7 @@ class Ex10StudentdbComp extends Component
         $this->caste = $student->caste ?? '';
         $this->religion = $student->religion ?? '';
         $this->admission_number = $student->admission_number ?? '';
-        $this->admission_date = $student->admission_date ? $student->admission_date->format('Y-m-d') : '';
+        $this->admission_date = $student->admission_date ? $student->admission_date->format('Y-m-d') : null;
         $this->board_reg_no = $student->board_reg_no ?? '';
         $this->board_roll_no = $student->board_roll_no ?? '';
         $this->admission_myclass_id = $student->admission_myclass_id ?? '';

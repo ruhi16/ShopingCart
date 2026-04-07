@@ -138,9 +138,17 @@ class Ex30MarksEntryComp3 extends Component
             ->where('subject_id', $this->subject_id)
             ->first();
 
-        if (!$setting) return;
+        if (!$setting) {
+            session()->flash('error', 'No exam setting found for this subject.');
+            return;
+        }
 
         $studentcr = Bs11Studentcr::find($studentcr_id);
+        
+        if (!$studentcr) {
+            session()->flash('error', 'Student not found.');
+            return;
+        }
 
         $is_absent = isset($this->absent[$studentcr_id]) && $this->absent[$studentcr_id];
         $mark_val = $this->marks[$studentcr_id] ?? null;

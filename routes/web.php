@@ -15,6 +15,7 @@ use App\Http\Livewire\Ex30MarksRegisterComp2;
 use App\Http\Livewire\Ex31MarksResultComp;
 use App\Http\Livewire\Ex30MarksEntryCombSemestersComp;
 use App\Http\Livewire\Ex30MarksEntryNewComp;
+use App\Http\Livewire\Ex30MarksEntryStudentcrComp;
 use App\Http\Livewire\LcMainLayout;
 use Whoops\Run;
 
@@ -36,6 +37,11 @@ Route::get('/marks-register2-pdf/{myclassId}', [Ex30MarksRegisterComp2::class, '
 
 Route::get('/marks-entry-comb-semesters', Ex30MarksEntryCombSemestersComp::class)->name('marks-entry-comb-semesters');
 Route::get('/marks-entry-new', Ex30MarksEntryNewComp::class)->name('marks-entry-new');
+
+
+Route::get('/marks-entry-studentcr', Ex30MarksEntryStudentcrComp::class)->name('marks-entry-studentcr');
+
+
 
 Route::get('/', function () {
     // $notices = Notice::all();         //orderBy('dop', 'desc')->get();

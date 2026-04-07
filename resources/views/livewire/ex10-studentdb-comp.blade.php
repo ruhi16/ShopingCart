@@ -65,7 +65,8 @@
                         <td class="px-3 py-2 text-sm text-gray-900">{{ $student->id }}</td>
                         <td class="px-3 py-2 text-sm text-gray-900">
                             {{ $student->student_name ?? 'N/A' }}
-                            <span class="text-gray-400 text-xs block">{{ $student->student_code ?? '-' }}</span>
+                            <span class="text-gray-600 text-xs block">Reg No:{{ $student->board_reg_no ?? '-' }}</span>
+                            <span class="text-gray-800 text-xs block">Code:{{ $student->student_code ?? '-' }}</span>
                         </td>
                         <td class="px-3 py-2 text-sm text-gray-900">{{ $student->father_name ?? '-' }}</td>
                         <td class="px-3 py-2 text-sm text-gray-900">
