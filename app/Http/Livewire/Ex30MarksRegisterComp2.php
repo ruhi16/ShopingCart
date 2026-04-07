@@ -40,6 +40,7 @@ class Ex30MarksRegisterComp2 extends Component
 
     public function generatePdf($myclassId = null)
     {
+        ini_set('max_execution_time', 300);
         // Resolve IDs from auth and active session (not from component state)
         $activeSession = Session::active()->first();
         $sessionId = $activeSession ? $activeSession->id : null;

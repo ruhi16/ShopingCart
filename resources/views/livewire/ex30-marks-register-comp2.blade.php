@@ -208,8 +208,11 @@
                                 {{ $student->studentdb->student_name ?? '—' }}
                             </div>
                             <div class="text-gray-400" style="font-size:18px">
-                                {{ $student->currentMyclass->name ?? '' }}
-                                {{ $student->currentSection->name ?? '' }}
+                                Class: {{ $student->currentMyclass->name ?? '' }}
+                                {{-- {{ $student->currentSection->name ?? '' }} --}}
+                            </div>
+                            <div class="text-gray-400" style="font-size:18px">
+                                Reg No: {{ $student->studentdb->board_reg_no ?? '' }}
                             </div>
                         </td>
                         @endif
