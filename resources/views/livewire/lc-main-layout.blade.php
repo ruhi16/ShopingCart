@@ -72,7 +72,12 @@
 
                             <a href="{{ route('studentcr') }}" target="_blank" 
                                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                Go to Student CR
+                                Student CR
+                            </a>
+
+                            <a href="{{ route('marks-entry3') }}" target="_blank" 
+                               class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                Marks Entry 3
                             </a>
 
                             {{-- <a href="{{ route('marks-register') }}" target="_blank" 
@@ -82,24 +87,32 @@
 
                             <a href="{{ route('marks-register2') }}" target="_blank" 
                                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                Go to Marks Register 2
+                                Marks Register 2
                             </a>
-                            <a href="{{ route('marks-entry3') }}" target="_blank" 
+
+                            <a href="{{ route('marks-register3') }}" target="_blank" 
                                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                Go to Marks Entry 3
+                                Marks Register 3 Rank
                             </a>
+                            
+                            
                             
                         </div>
                         <br />
                         <div class="flex flex-col gap-2 sm:flex-row">
                             <a href="{{ route('marks-register2-pdf', ['myclassId' => 1]) }}" target="_blank" 
                                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
-                                Go to Marks Register PDF 2
+                                Marks Register PDF 2
                             </a>
 
                             <a href="{{ route('marks-entry-comb-semesters') }}" target="_blank" 
                                class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
-                                Go to Marks Entry Comb Semesters
+                                Marks Entry Comb Semesters
+                            </a>
+
+                            <a href="{{ route('marks-entry-studentcr') }}" target="_blank" 
+                               class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                                Marks Entry Individual StudentCR
                             </a>
 
                             {{-- <a href="{{ route('marks-entry-new') }}" target="_blank" 
