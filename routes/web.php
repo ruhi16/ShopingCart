@@ -39,8 +39,6 @@ Route::get('/marks-register2-pdf/{myclassId}', [Ex30MarksRegisterComp2::class, '
 
 Route::get('/marks-entry-comb-semesters', Ex30MarksEntryCombSemestersComp::class)->name('marks-entry-comb-semesters');
 Route::get('/marks-entry-new', Ex30MarksEntryNewComp::class)->name('marks-entry-new');
-
-
 Route::get('/marks-entry-studentcr', Ex30MarksEntryStudentcrComp::class)->name('marks-entry-studentcr');
 
 
